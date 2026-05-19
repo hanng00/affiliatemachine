@@ -1,0 +1,302 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typography - distinctive but readable */
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-display: "Outfit", system-ui, sans-serif;
+  
+  /* Electric/energetic color palette - green for eco/electric, dark for premium feel */
+  --color-border: #e5e7eb;
+  --color-input: #e5e7eb;
+  --color-ring: #12b569;
+  --color-background: #f9fafb;
+  --color-foreground: #14181f;
+  
+  /* Primary: Electric green */
+  --color-primary: #12b569;
+  --color-primary-foreground: #ffffff;
+  
+  /* Secondary: Warm neutral */
+  --color-secondary: #faf8f5;
+  --color-secondary-foreground: #292524;
+  
+  /* Accent: Electric blue for highlights */
+  --color-accent: #0099e6;
+  --color-accent-foreground: #ffffff;
+  
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  
+  --color-muted: #f3f4f6;
+  --color-muted-foreground: #6b7280;
+  
+  --color-card: #ffffff;
+  --color-card-foreground: #14181f;
+  
+  /* Success green for pros */
+  --color-success: #12b569;
+  --color-success-light: #ecfdf5;
+  
+  /* Warning/badge orange */
+  --color-badge: #f97316;
+  --color-badge-foreground: #ffffff;
+  
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+/* Semantic color utility classes */
+@layer utilities {
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+  
+  .bg-primary\/10 {
+    background-color: color-mix(in oklab, var(--color-primary) 10%, transparent);
+  }
+  
+  .bg-primary\/80 {
+    background-color: color-mix(in oklab, var(--color-primary) 80%, transparent);
+  }
+  
+  .text-primary {
+    color: var(--color-primary);
+  }
+  
+  .text-primary-foreground {
+    color: var(--color-primary-foreground);
+  }
+  
+  .text-primary-foreground\/90 {
+    color: color-mix(in oklab, var(--color-primary-foreground) 90%, transparent);
+  }
+  
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
+  
+  .text-secondary-foreground {
+    color: var(--color-secondary-foreground);
+  }
+  
+  .bg-muted {
+    background-color: var(--color-muted);
+  }
+  
+  .text-muted-foreground {
+    color: var(--color-muted-foreground);
+  }
+  
+  .bg-card {
+    background-color: var(--color-card);
+  }
+  
+  .text-card-foreground {
+    color: var(--color-card-foreground);
+  }
+  
+  .bg-destructive {
+    background-color: var(--color-destructive);
+  }
+  
+  .text-destructive-foreground {
+    color: var(--color-destructive-foreground);
+  }
+  
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+  
+  .text-accent-foreground {
+    color: var(--color-accent-foreground);
+  }
+  
+  .bg-background {
+    background-color: var(--color-background);
+  }
+  
+  .text-foreground {
+    color: var(--color-foreground);
+  }
+  
+  .border-border {
+    border-color: var(--color-border);
+  }
+  
+  .border-input {
+    border-color: var(--color-input);
+  }
+  
+  .border-primary\/20 {
+    border-color: color-mix(in oklab, var(--color-primary) 20%, transparent);
+  }
+  
+  .ring-ring {
+    --tw-ring-color: var(--color-ring);
+  }
+  
+  .from-primary {
+    --tw-gradient-from: var(--color-primary);
+  }
+  
+  .to-primary\/80 {
+    --tw-gradient-to: color-mix(in oklab, var(--color-primary) 80%, transparent);
+  }
+  
+  .bg-gradient-to-br {
+    background-image: linear-gradient(to bottom right, var(--tw-gradient-from), var(--tw-gradient-to));
+  }
+}
+
+/* Base styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/* Display headings use Outfit */
+h1, h2, h3 {
+  font-family: var(--font-display);
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, #12b569 0%, #0d9488 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hero gradient background */
+.hero-gradient {
+  background: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(18, 181, 105, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 50%, rgba(0, 153, 230, 0.08) 0%, transparent 50%),
+    linear-gradient(to bottom, #f9fafb 0%, #ffffff 100%);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 20px 40px -12px rgba(20, 24, 31, 0.15),
+    0 0 0 1px rgba(18, 181, 105, 0.1);
+}
+
+/* Rank badge styles */
+.rank-badge {
+  background: linear-gradient(135deg, #12b569 0%, #0f9556 100%);
+  box-shadow: 0 4px 12px rgba(18, 181, 105, 0.3);
+  color: white;
+}
+
+.rank-badge-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+  color: white;
+}
+
+/* CTA button glow effect */
+.cta-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, #12b569 0%, #0d9488 100%);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  filter: blur(8px);
+}
+
+.cta-glow:hover::before {
+  opacity: 0.6;
+}
+
+/* Price tag styling */
+.price-tag {
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.02em;
+}
+
+/* Comparison table zebra stripes */
+.comparison-row:nth-child(even) {
+  background: rgba(243, 244, 246, 0.5);
+}
+
+/* Trust badge animation */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.trust-badge {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+/* Scroll indicator */
+@keyframes bounce-down {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+.scroll-indicator {
+  animation: bounce-down 2s ease-in-out infinite;
+}
+
+/* Star rating fill */
+.star-filled {
+  color: #fbbf24;
+  filter: drop-shadow(0 1px 2px rgba(251, 191, 36, 0.3));
+}
+
+/* Pros/cons icons */
+.pro-icon {
+  color: #12b569;
+  background: #ecfdf5;
+}
+
+.con-icon {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+/* Section divider */
+.section-divider {
+  background: linear-gradient(90deg, transparent 0%, #e5e7eb 50%, transparent 100%);
+  height: 1px;
+}
+
+/* Noise texture overlay for depth */
+.noise-overlay {
+  position: relative;
+}
+
+.noise-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.02;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}

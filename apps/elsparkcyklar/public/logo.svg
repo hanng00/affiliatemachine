@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <!-- Electric scooter wheel -->
+  <circle cx="20" cy="28" r="8" stroke="#12b569" stroke-width="2.5" fill="none"/>
+  <circle cx="20" cy="28" r="3" fill="#12b569"/>
+  
+  <!-- Scooter stem/handlebar -->
+  <path d="M20 28 L20 12" stroke="#14181f" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M14 12 L26 12" stroke="#14181f" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Lightning bolt accent -->
+  <path d="M28 6 L24 14 L28 14 L24 22" stroke="#12b569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
