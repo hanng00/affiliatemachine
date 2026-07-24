@@ -1,0 +1,32 @@
+{
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	"name": "affiliate-admin",
+	"main": "worker/src/index.ts",
+	"compatibility_date": "2024-12-01",
+	"observability": {
+		"enabled": true
+	},
+	// SPA + API in one Worker: /api/* → Hono, everything else → static assets.
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS",
+		"not_found_handling": "single-page-application"
+	}
+	// No database: the site list is the shared @affiliate/sites registry (compiled
+	// into the Worker) and every metric is read live from GA4/GSC/Adtraction and
+	// edge-cached for 24h (no cron, no persistence). Durable history, if ever
+	// needed, belongs in an append-only R2/KV cron — not a relational DB here.
+	//
+	// Internal dashboard ships on *.workers.dev by default (no DNS to provision).
+	// For a custom domain — provisioned by wrangler on deploy, no dashboard clicks —
+	// add (inside a Cloudflare-managed zone):
+	// "routes": [{ "pattern": "admin.billigastebilforsakringen.se", "custom_domain": true }]
+	//
+	// Switch from empty (zeroed) series to live data by setting these secrets.
+	// We auth as the owner (consumer gmail can't grant a service account GSC
+	// access); generate the refresh token once via ops/mint-google-refresh-token.ts:
+	//   wrangler secret put GOOGLE_OAUTH_CLIENT_ID      // GA4 clicks + GSC impressions
+	//   wrangler secret put GOOGLE_OAUTH_CLIENT_SECRET
+	//   wrangler secret put GOOGLE_OAUTH_REFRESH_TOKEN
+	//   wrangler secret put ADTRACTION_API_TOKEN        // revenue (per-channel)
+}

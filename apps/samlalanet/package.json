@@ -1,0 +1,34 @@
+{
+  "name": "samlalanet",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --outDir dist && vite build --ssr src/entry-server.tsx --outDir dist-server && bun prerender.ts",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "deploy": "bun run build && npx wrangler pages deploy dist --project-name=samlalanet"
+  },
+  "dependencies": {
+    "@affiliate/analytics": "workspace:*",
+    "@affiliate/loan-calculator": "workspace:*",
+    "@affiliate/seo": "workspace:*",
+    "@affiliate/sites": "workspace:*",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-helmet-async": "^2.0.5",
+    "react-router": "^7.6.1",
+    "react-router-dom": "^7.6.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.7",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "@vitejs/plugin-react": "^4.5.0",
+    "autoprefixer": "^10.4.21",
+    "tailwindcss": "^4.1.7",
+    "typescript": "^5.8.3",
+    "vite": "^6.4.2"
+  }
+}

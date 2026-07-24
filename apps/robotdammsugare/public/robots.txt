@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://robotdammsugare.se/sitemap.xml
+Sitemap: https://xn--bstarobotdammsugare-gwb.se/sitemap.xml

@@ -1,25 +1,19 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useRoutes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import HomePage from "./pages/index";
 import JamforPage from "./pages/jamfor";
 import GuidePage from "./pages/guide";
-import HusdjurPage from "./pages/husdjur";
-import LagenheterPage from "./pages/lagenheter";
-import StoraHemPage from "./pages/stora-hem";
 
-export function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/jamfor" element={<JamforPage />} />
-          <Route path="/guide" element={<GuidePage />} />
-          <Route path="/husdjur" element={<HusdjurPage />} />
-          <Route path="/lagenheter" element={<LagenheterPage />} />
-          <Route path="/stora-hem" element={<StoraHemPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
+/** Routes shared by the client (BrowserRouter) and prerender (StaticRouter) entries. */
+export function AppRoutes() {
+  return useRoutes([
+    {
+      element: <Layout />,
+      children: [
+        { path: "/", element: <HomePage /> },
+        { path: "/jamfor", element: <JamforPage /> },
+        { path: "/guide", element: <GuidePage /> },
+      ],
+    },
+  ]);
 }

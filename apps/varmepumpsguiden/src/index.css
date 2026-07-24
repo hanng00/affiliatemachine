@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  /* Värme editorial: warm ember-red primary (heat), deep ink, green = savings */
+  --color-border: #E7E0DA;
+  --color-input: #E7E0DA;
+  --color-ring: #E2563B;
+  --color-background: #FBF8F6;
+  --color-foreground: #181311;
+
+  /* Ember = "värme"; drives primary CTAs. Deep enough for white text. */
+  --color-primary: #D9442B;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: #F6EEEA;
+  --color-secondary-foreground: #6B2E1E;
+
+  --color-accent: #FBEAE3;
+  --color-accent-foreground: #181311;
+
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-muted: #F2ECE8;
+  --color-muted-foreground: #756258;
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #181311;
+
+  /* Brand accents reused across the page */
+  --color-ember: #E2563B;
+  --color-ember-soft: #FBE3DB;
+  --color-grass: #16A34A;
+  --color-grass-soft: #E3F4E8;
+  --color-deep: #1F6F6B;
+
+  --radius: 1rem;
+
+  --font-display: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #181311;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  html { scroll-behavior: auto; }
+}

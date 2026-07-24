@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@theme {
+  /* "Calm Ledger" — paper canvas, teal-navy trust, gold saving, clay caution.
+     Restraint is the trust signal: ≤2 saturated colors on screen at once. */
+  --color-border: #E7E1D5;
+  --color-input: #E7E1D5;
+  --color-ring: #13505B;
+
+  /* Warm off-white / paper, not stark white */
+  --color-background: #FBF8F2;
+  --color-foreground: #1A2B2F;
+
+  /* Deep teal-navy = trust; drives primary CTAs + headline accents */
+  --color-primary: #13505B;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: #F3EEE4;
+  --color-secondary-foreground: #1A2B2F;
+
+  --color-accent: #ECF1F0;
+  --color-accent-foreground: #1A2B2F;
+
+  --color-destructive: #B4532A;
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-muted: #F3EEE4;
+  --color-muted-foreground: #5C6B6E;
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1A2B2F;
+
+  /* Brand accents reused across the page */
+  --color-teal: #13505B;
+  --color-teal-deep: #0B3A42;
+  --color-teal-soft: #DCE8E8;
+  /* Warm gold/amber = "your saving"; used ONLY for the positive number + CTA hover */
+  --color-gold: #C8881A;
+  --color-gold-soft: #FBEFCF;
+  /* Muted terracotta/clay = "the cost you now pay"; never pure red */
+  --color-clay: #B4532A;
+  --color-clay-soft: #F4E2D6;
+
+  --radius: 1rem;
+
+  /* Editorial serif display (distinct from solceller's geometric sans) */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  line-height: 1.65;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #15252A;
+}
+
+/* Tabular figures everywhere money is shown */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  html { scroll-behavior: auto; }
+}

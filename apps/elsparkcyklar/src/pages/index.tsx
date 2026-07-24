@@ -1,208 +1,221 @@
-import { SEOHead } from "@affiliate/seo";
-import { Button, Badge } from "@affiliate/ui";
+import { useState, useMemo } from "react";
+import { SEOHead, SchemaScript, canonicalUrl, type ProductListItem } from "@affiliate/seo";
+import { useTrackClick, useTrackActivation, buildSubId, appendSubId } from "@affiliate/analytics";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 import { siteConfig } from "../config/site";
-import { getAffiliate, getAllAffiliates, type ExtendedAffiliateProduct } from "../config/affiliates";
+import { getAllAffiliates, type ExtendedAffiliateProduct } from "../config/affiliates";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-function HeroWinnerCard({ product }: { product: ExtendedAffiliateProduct }) {
+type SortKey = "price" | "rating" | "range" | "weight";
+type FilterKey = "all" | "roadLegal" | "budget" | "premium" | "commuter" | "power";
+
+const filterOptions: { key: FilterKey; label: string; description: string }[] = [
+  { key: "all", label: "Alla", description: "Visa alla modeller" },
+  { key: "roadLegal", label: "Väglagliga", description: "Max 250W, 20 km/h" },
+  { key: "budget", label: "Budget", description: "Under 7 000 kr" },
+  { key: "commuter", label: "Pendling", description: "Bäst för daglig användning" },
+  { key: "premium", label: "Premium", description: "Bäst kvalitet" },
+  { key: "power", label: "Kraftfulla", description: "Mest prestanda" },
+];
+
+const sortOptions: { key: SortKey; label: string }[] = [
+  { key: "rating", label: "Betyg (högst först)" },
+  { key: "price", label: "Pris (lägst först)" },
+  { key: "range", label: "Räckvidd (längst först)" },
+  { key: "weight", label: "Vikt (lättast först)" },
+];
+
+function parseRange(range: string | undefined): number {
+  if (!range) return 0;
+  const match = range.match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
+function parseWeight(weight: string | undefined): number {
+  if (!weight) return 999;
+  const match = weight.match(/([\d.]+)/);
+  return match ? parseFloat(match[1]) : 999;
+}
+
+function getBadgeVariant(badge?: string): "best" | "budget" | "premium" {
+  if (!badge) return "best";
+  if (badge.toLowerCase().includes("budget") || badge.toLowerCase().includes("bästa köp") || badge.toLowerCase().includes("prisvärd")) return "budget";
+  if (badge.toLowerCase().includes("premium")) return "premium";
+  return "best";
+}
+
+function ScooterCard({ 
+  scooter, 
+  rank 
+}: { 
+  scooter: ExtendedAffiliateProduct; 
+  rank: number;
+}) {
+  const subId = buildSubId(siteConfig.slug, "product_card", scooter.id);
+  const href = appendSubId(scooter.trackingUrl, subId);
+  const trackBuy = useTrackClick({
+    linkId: scooter.id,
+    program: "adtraction",
+    placement: "product_card",
+    destinationUrl: href,
+    subId,
+  });
   return (
-    <div className="relative mx-auto max-w-2xl overflow-hidden rounded-2xl border-2 border-primary/30 bg-card shadow-xl">
-      <div className="absolute right-0 top-0 rounded-bl-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
-        🏆 #1 Vinnare
-      </div>
-      <div className="p-6 md:p-8">
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold md:text-3xl">{product.name}</h2>
-            <div className="mt-2 flex items-center gap-2">
-              <div className="flex text-amber-400">
-                {"★".repeat(5)}
-              </div>
-              <span className="font-semibold">{product.rating}/5</span>
+    <article className="overflow-hidden rounded-[10px] border border-[var(--color-border)] bg-white" id={scooter.id}>
+      <div className="grid grid-cols-1 md:grid-cols-[180px_1fr]">
+        {/* Image column */}
+        <div className="relative flex items-start bg-white">
+          <div className="sticky top-0 flex h-[180px] w-full items-center justify-center p-4">
+            <span className="absolute left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-[4px] bg-[var(--color-accent)] font-mono text-[0.85rem] font-semibold text-white">
+              {rank}
+            </span>
+            {scooter.image && (
+              <img 
+                src={scooter.image} 
+                alt={`${scooter.name} elsparkcykel`}
+                loading="lazy"
+                width="200"
+                height="200"
+                className="max-h-full max-w-full object-contain"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Content column */}
+        <div className="px-5 py-4">
+          <div className="mb-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-[1.15rem] font-bold leading-tight">{scooter.name}</h3>
+              {scooter.badge && (
+                <Badge variant={getBadgeVariant(scooter.badge)}>{scooter.badge}</Badge>
+              )}
             </div>
-            <div className="mt-4 flex flex-wrap gap-3 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <span className="text-primary">🔋</span> {product.range} räckvidd
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="text-primary">⚡</span> {product.motor}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="text-primary">🛡️</span> Hydraulisk fjädring
-              </span>
+            <div className="mt-1 flex items-center gap-1.5 text-[0.85rem] text-[var(--color-text-muted)]">
+              <span className="font-mono font-semibold text-foreground">{scooter.rating}</span>
+              <span className="text-[var(--color-text-subtle)]">/ 5</span>
+              {scooter.bestFor && (
+                <>
+                  <span className="text-[var(--color-text-subtle)]">·</span>
+                  <span>{scooter.bestFor}</span>
+                </>
+              )}
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold text-foreground md:text-4xl">
-              {product.price.amount.toLocaleString("sv-SE")} kr
+
+          {scooter.summary && (
+            <p className="mb-3 text-[0.85rem] leading-[1.5] text-[var(--color-text-muted)]">{scooter.summary}</p>
+          )}
+
+          {/* Spec grid */}
+          <div className="grid grid-cols-4 gap-px overflow-hidden rounded-[6px] border border-[var(--color-border-subtle)] bg-[var(--color-border-subtle)]">
+            <div className="bg-white px-2 py-3 text-center">
+              <div className="font-mono text-base font-semibold">{scooter.topSpeedKmh ?? "–"}</div>
+              <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.04em] text-[var(--color-text-muted)]">km/h</div>
             </div>
-            <Button asChild size="lg" className="cta-glow mt-4 w-full md:w-auto">
-              <a href={product.trackingUrl} target="_blank" rel="noopener noreferrer sponsored">
-                Se bästa pris →
+            <div className="bg-white px-2 py-3 text-center">
+              <div className="font-mono text-base font-semibold">{scooter.rangeKm ?? "–"}</div>
+              <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.04em] text-[var(--color-text-muted)]">km</div>
+            </div>
+            <div className="bg-white px-2 py-3 text-center">
+              <div className="font-mono text-base font-semibold">{scooter.motorWatts ?? "–"}</div>
+              <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.04em] text-[var(--color-text-muted)]">W</div>
+            </div>
+            <div className="bg-white px-2 py-3 text-center">
+              <div className="font-mono text-base font-semibold">{scooter.weightKg ?? "–"}</div>
+              <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.04em] text-[var(--color-text-muted)]">kg</div>
+            </div>
+          </div>
+
+          {/* Pros */}
+          {scooter.pros && scooter.pros.length > 0 && (
+            <div className="mt-3 border-t border-[var(--color-border-subtle)] pt-3">
+              <h4 className="mb-1.5 text-[0.72rem] font-bold uppercase tracking-[0.04em] text-[var(--color-text-subtle)]">Fördelar</h4>
+              <ul className="flex flex-col gap-0.5 text-[0.8rem] text-[var(--color-text-muted)]">
+                {scooter.pros.slice(0, 3).map((pro, i) => (
+                  <li key={i}><span className="font-bold text-[var(--color-success)]">+ </span>{pro}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="mt-3 flex flex-col items-stretch gap-4 border-t border-[var(--color-border-subtle)] pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col">
+              <span className="font-mono text-[1.25rem] font-semibold">
+                {scooter.price.amount.toLocaleString("sv-SE")} kr
+              </span>
+              <span className="text-[0.7rem] text-[var(--color-text-subtle)]">Pris hos E-Wheels</span>
+            </div>
+            <Button asChild>
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener sponsored nofollow"
+                onClick={trackBuy}
+              >
+                Köp nu →
               </a>
             </Button>
           </div>
+          <p className="mt-3 text-right text-[0.7rem] text-[var(--color-text-subtle)]">Affiliatelänk — vi kan få provision vid köp</p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function QuickPickCard({ 
-  product, 
-  label, 
-  icon 
-}: { 
-  product: ExtendedAffiliateProduct; 
-  label: string; 
-  icon: string;
-}) {
-  return (
-    <div className="card-hover flex flex-col rounded-xl border border-border/50 bg-card p-5">
-      <div className="mb-3 flex items-center gap-2">
-        <span className="text-lg">{icon}</span>
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
-      </div>
-      <h3 className="text-lg font-bold">{product.name}</h3>
-      <div className="mt-1 flex items-center gap-1 text-sm">
-        <span className="text-amber-400">★</span>
-        <span className="font-medium">{product.rating}</span>
-      </div>
-      <div className="mt-2 text-sm text-muted-foreground">
-        {product.range} • {product.motor}
-      </div>
-      <div className="mt-auto pt-4">
-        <div className="mb-3 text-xl font-bold">{product.price.amount.toLocaleString("sv-SE")} kr</div>
-        <Button asChild size="default" className="w-full">
-          <a href={product.trackingUrl} target="_blank" rel="noopener noreferrer sponsored">
-            Se pris →
-          </a>
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function CompactTableRow({ product, rank }: { product: ExtendedAffiliateProduct; rank: number }) {
-  return (
-    <tr className="border-b border-border/50 last:border-0">
-      <td className="py-3 pr-3">
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-          {rank}
-        </div>
-      </td>
-      <td className="py-3">
-        <div className="font-semibold">{product.name}</div>
-        {product.isRoadLegal && (
-          <span className="text-xs font-medium text-emerald-600">✓ Väglaglig</span>
-        )}
-      </td>
-      <td className="hidden py-3 text-center sm:table-cell">
-        <span className="text-amber-400">★</span> {product.rating}
-      </td>
-      <td className="hidden py-3 text-center md:table-cell">
-        {product.range}
-      </td>
-      <td className="py-3 text-right font-semibold">
-        {product.price.amount.toLocaleString("sv-SE")} kr
-      </td>
-      <td className="py-3 pl-3 text-right">
-        <Button asChild size="sm" className="cta-glow">
-          <a href={product.trackingUrl} target="_blank" rel="noopener noreferrer sponsored">
-            Köp →
-          </a>
-        </Button>
-      </td>
-    </tr>
-  );
-}
-
-function FAQItem({ question, answer, defaultOpen = false }: { question: string; answer: React.ReactNode; defaultOpen?: boolean }) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  
-  return (
-    <div className="border-b border-border/50 last:border-0">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between py-4 text-left font-semibold hover:text-primary"
-      >
-        {question}
-        <span className="ml-2 text-muted-foreground">{isOpen ? "▲" : "▼"}</span>
-      </button>
-      {isOpen && (
-        <div className="pb-4 text-muted-foreground">
-          {answer}
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface Review {
-  quote: string;
-  author: string;
-  location: string;
-  source: string;
-  rating: number;
-}
-
-const userReviews: Review[] = [
-  {
-    quote: "Fantastisk räckvidd! Pendlar 15 km varje dag utan problem. Batteriet håller hela veckan.",
-    author: "Erik L.",
-    location: "Stockholm",
-    source: "Prisjakt",
-    rating: 5,
-  },
-  {
-    quote: "Bästa köpet jag gjort på länge. Smidig att fälla ihop och tar med på tunnelbanan.",
-    author: "Maria S.",
-    location: "Göteborg",
-    source: "Amazon.se",
-    rating: 5,
-  },
-  {
-    quote: "Stabil och trygg att köra. Perfekt för min dagliga pendling till jobbet.",
-    author: "Anders K.",
-    location: "Malmö",
-    source: "Elgiganten",
-    rating: 4,
-  },
-  {
-    quote: "Kvalitetskänsla i en helt annan klass. Värt varenda krona.",
-    author: "Sofia B.",
-    location: "Uppsala",
-    source: "Trustpilot",
-    rating: 5,
-  },
-];
-
-function ReviewCard({ review }: { review: Review }) {
-  return (
-    <div className="flex flex-col rounded-xl border border-border/50 bg-card p-5">
-      <div className="mb-3 flex text-amber-400">
-        {"★".repeat(review.rating)}
-        {"☆".repeat(5 - review.rating)}
-      </div>
-      <blockquote className="flex-1 text-foreground">
-        "{review.quote}"
-      </blockquote>
-      <div className="mt-4 text-sm text-muted-foreground">
-        — {review.author}, {review.location}
-        <span className="ml-1 text-xs">({review.source})</span>
-      </div>
-    </div>
+    </article>
   );
 }
 
 export default function HomePage() {
-  const topPick = getAffiliate("segway");
-  const budgetPick = getAffiliate("xiaomi4Pro");
-  const roadLegalPick = getAffiliate("niuKqi3Pro");
-  const powerPick = getAffiliate("vsett9Plus");
-  
-  const allProducts = getAllAffiliates().slice(0, 5);
+  const allScooters = getAllAffiliates();
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
+  const [sortBy, setSortBy] = useState<SortKey>("rating");
+
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = [...allScooters];
+
+    switch (activeFilter) {
+      case "roadLegal":
+        filtered = filtered.filter((p) => p.isRoadLegal);
+        break;
+      case "budget":
+        filtered = filtered.filter((p) => p.price.amount < 7000);
+        break;
+      case "premium":
+        filtered = filtered.filter((p) => p.category === "premium");
+        break;
+      case "commuter":
+        filtered = filtered.filter((p) => p.category === "commuter");
+        break;
+      case "power":
+        filtered = filtered.filter((p) => p.category === "power");
+        break;
+    }
+
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "price":
+          return a.price.amount - b.price.amount;
+        case "rating":
+          return (b.rating || 0) - (a.rating || 0);
+        case "range":
+          return parseRange(b.range) - parseRange(a.range);
+        case "weight":
+          return parseWeight(a.weight) - parseWeight(b.weight);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [allScooters, activeFilter, sortBy]);
+
+  // Activation = picked a need-filter ("for my use-case"), i.e. moved off "all".
+  const trackActivation = useTrackActivation("list_filtered");
+  function selectFilter(key: FilterKey) {
+    if (key !== "all") trackActivation();
+    setActiveFilter(key);
+  }
 
   const faqSchema = {
     "@context": "https://schema.org",
@@ -210,18 +223,18 @@ export default function HomePage() {
     mainEntity: [
       {
         "@type": "Question",
-        name: "Vilken elsparkcykel är bäst i test 2026?",
+        name: "Är elsparkcyklar lagliga i Sverige?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Segway Ninebot Max G2 är vårt toppval med 5/5 betyg. Den har 70 km räckvidd, hydraulisk fjädring och utmärkt byggkvalitet. För budget rekommenderar vi Xiaomi 4 Pro.",
+          text: "Ja. Elsparkcyklar med max 20 km/h och 250W motor klassas som cykel och får köras på cykelbanor utan körkort.",
         },
       },
       {
         "@type": "Question",
-        name: "Är elsparkcyklar lagliga i Sverige?",
+        name: "Vilken elsparkcykel är bäst för pendling?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Ja, med max 250W motor och 20 km/h. Snabbare modeller kräver registrering och försäkring.",
+          text: "För daglig pendling rekommenderar vi modeller med minst 40 km räckvidd, 10-tums hjul, bra fjädring och vattentålighet.",
         },
       },
       {
@@ -229,153 +242,285 @@ export default function HomePage() {
         name: "Behöver jag försäkring för min elsparkcykel?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Endast om din elsparkcykel går över 20 km/h, eller över 14 km/h och väger mer än 25 kg. NIU KQi3 Pro är väglaglig och kräver ingen försäkring.",
+          text: "Om din elsparkcykel håller sig inom 20 km/h och 250W täcks du vanligtvis av din hemförsäkring.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Kan man köra elsparkcykel på vintern?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Ja, men batterikapaciteten minskar 20–40% i kyla och du bör överväga dubbdäck.",
         },
       },
     ],
   };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Elsparkcyklar.se",
+    url: "https://elsparkcyklar.se",
+    description: "Oberoende tester och guider för elsparkcyklar i Sverige",
+    inLanguage: "sv-SE",
+  };
+
+  const productListItems: ProductListItem[] = allScooters.map((s) => ({
+    name: s.name,
+    description: s.summary || s.description,
+    image: s.image,
+    url: `https://${siteConfig.domain}/#${s.id}`,
+    price: s.price.amount,
+    priceCurrency: s.price.currency || "SEK",
+  }));
 
   return (
     <>
       <SEOHead
         title={siteConfig.title}
         description={siteConfig.description}
+        canonical={canonicalUrl(siteConfig.domain, "/")}
         siteName={siteConfig.name}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
       />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
+      <SchemaScript schema={{ type: "ItemList", items: productListItems }} />
 
-      {/* HERO - Above the fold with #1 pick */}
-      <section className="hero-gradient py-10 md:py-16">
-        <div className="container mx-auto px-4">
-          {/* Trust signals */}
-          <div className="mb-6 flex flex-wrap items-center justify-center gap-3 text-sm">
-            <span className="flex items-center gap-1.5 rounded-full bg-card px-3 py-1 shadow-sm">
-              <span className="text-primary">✓</span> 50+ timmars research
-            </span>
-            <span className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 font-medium text-primary">
-              <span>✓</span> Uppdaterad {new Date().toLocaleDateString("sv-SE", { day: "numeric", month: "short", year: "numeric" })}
-            </span>
-            <span className="flex items-center gap-1.5 rounded-full bg-card px-3 py-1 shadow-sm">
-              <span className="text-primary">✓</span> 2,847 läsare denna månad
-            </span>
+      {/* Hero */}
+      <section className="border-b border-[var(--color-border-subtle)] py-12 md:py-14">
+        <div className="mx-auto max-w-[1080px] px-5">
+          <div className="rise grid items-center gap-8 md:grid-cols-2 md:gap-12">
+            <div className="max-w-[480px]">
+              <p className="mb-3 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-[var(--color-accent)]">
+                Uppdaterad maj 2026
+              </p>
+              <h1 className="font-display text-[clamp(1.75rem,4vw,2.5rem)] font-bold leading-[1.25] tracking-[-0.01em]">
+                Hitta rätt elsparkcykel för svenska förhållanden
+              </h1>
+              <p className="mt-4 max-w-[540px] text-[1.1rem] leading-[1.65] text-[var(--color-text-muted)]">
+                Oberoende tester och guider för dig som vill pendla smartare. 
+                Vi hjälper dig välja rätt modell, förstå reglerna och klara vintern.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Button asChild>
+                  <a href="#produkter">Se alla modeller</a>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/regler">Regler & Lagar</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <img 
+                src="/hero.png" 
+                alt="Person på elsparkcykel i stadsmiljö" 
+                width="600" 
+                height="400"
+                className="max-w-full rounded-[10px]"
+              />
+            </div>
           </div>
-
-          {/* Headline */}
-          <h1 className="mb-8 text-center text-3xl font-extrabold tracking-tight md:text-5xl">
-            Bästa elsparkcykeln 2026
-          </h1>
-
-          {/* #1 Winner Card */}
-          <HeroWinnerCard product={topPick} />
         </div>
       </section>
 
-      {/* QUICK PICKS - 3 category winners */}
-      <section className="py-10 md:py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <QuickPickCard product={budgetPick} label="Bäst budget" icon="💰" />
-            <QuickPickCard product={roadLegalPick} label="Laglig på väg" icon="✅" />
-            <QuickPickCard product={powerPick} label="Mest kraftfull" icon="⚡" />
+      {/* Quick facts */}
+      <section className="border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-muted)] py-6">
+        <div className="mx-auto max-w-[1080px] px-5">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="text-center">
+              <span className="block font-mono text-[1.15rem] font-semibold">20 km/h</span>
+              <span className="mt-0.5 block text-[0.75rem] text-[var(--color-text-muted)]">Laglig maxhastighet</span>
+            </div>
+            <div className="text-center">
+              <span className="block font-mono text-[1.15rem] font-semibold">250 W</span>
+              <span className="mt-0.5 block text-[0.75rem] text-[var(--color-text-muted)]">Max motoreffekt</span>
+            </div>
+            <div className="text-center">
+              <span className="block font-mono text-[1.15rem] font-semibold">3 000 kr</span>
+              <span className="mt-0.5 block text-[0.75rem] text-[var(--color-text-muted)]">Från-pris</span>
+            </div>
+            <div className="text-center">
+              <span className="block font-mono text-[1.15rem] font-semibold">80 km</span>
+              <span className="mt-0.5 block text-[0.75rem] text-[var(--color-text-muted)]">Bästa räckvidd</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* COMPACT COMPARISON TABLE */}
-      <section className="bg-muted/30 py-10 md:py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="mb-6 text-center text-2xl font-bold">Alla testade modeller</h2>
-          <div className="mx-auto max-w-4xl overflow-hidden rounded-xl border border-border/50 bg-card">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50 text-sm text-muted-foreground">
-                  <th className="py-3 pl-4 pr-3 text-left">#</th>
-                  <th className="py-3 text-left">Modell</th>
-                  <th className="hidden py-3 text-center sm:table-cell">Betyg</th>
-                  <th className="hidden py-3 text-center md:table-cell">Räckvidd</th>
-                  <th className="py-3 text-right">Pris</th>
-                  <th className="py-3 pl-3 pr-4 text-right"></th>
-                </tr>
-              </thead>
-              <tbody className="px-4">
-                {allProducts.map((product, index) => (
-                  <CompactTableRow key={product.id} product={product} rank={index + 1} />
+      {/* Products with filters */}
+      <section id="produkter" className="py-12">
+        <div className="mx-auto max-w-[1080px] px-5">
+          <header className="mb-7">
+            <h2 className="font-display text-[clamp(1.35rem,2.5vw,1.75rem)] font-bold">Alla elsparkcyklar 2026</h2>
+            <p className="mt-1 text-base text-[var(--color-text-muted)]">Testade och utvärderade för svenska förhållanden — regn, kyla och cykelbanor.</p>
+          </header>
+
+          {/* Filters */}
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {filterOptions.map((option) => (
+                <button
+                  key={option.key}
+                  onClick={() => selectFilter(option.key)}
+                  className={`rounded-[6px] px-3.5 py-2 text-[0.88rem] font-medium transition-all ${
+                    activeFilter === option.key
+                      ? "bg-[var(--color-accent)] text-white"
+                      : "bg-[var(--color-bg-muted)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-muted)]/80"
+                  }`}
+                  title={option.description}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label htmlFor="sort" className="text-[0.85rem] text-[var(--color-text-muted)]">
+                Sortera:
+              </label>
+              <select
+                id="sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortKey)}
+                className="rounded-[6px] border border-[var(--color-border)] bg-white px-3 py-2 text-[0.85rem] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </div>
           </div>
-          <div className="mt-4 text-center">
-            <Button asChild variant="outline" size="default">
-              <Link to="/jamfor">Se fullständig jämförelse →</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
 
-      {/* USER REVIEWS */}
-      <section className="py-10 md:py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="mb-2 text-center text-2xl font-bold">Vad användare säger</h2>
-          <p className="mb-8 text-center text-muted-foreground">
-            Riktiga omdömen från svenska köpare
+          {/* Results count */}
+          <p className="mb-4 text-[0.85rem] text-[var(--color-text-muted)]">
+            Visar <strong className="text-foreground">{filteredAndSortedProducts.length}</strong> av {allScooters.length} modeller
+            {activeFilter !== "all" && (
+              <button
+                onClick={() => setActiveFilter("all")}
+                className="ml-2 text-[var(--color-accent)] hover:underline"
+              >
+                Rensa filter
+              </button>
+            )}
           </p>
-          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {userReviews.map((review, index) => (
-              <ReviewCard key={index} review={review} />
-            ))}
+
+          {/* Product cards */}
+          {filteredAndSortedProducts.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {filteredAndSortedProducts.map((scooter, i) => (
+                <ScooterCard key={scooter.id} scooter={scooter} rank={i + 1} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[10px] border border-[var(--color-border)] bg-white p-12 text-center">
+              <p className="text-[var(--color-text-muted)]">Inga modeller matchar dina filter.</p>
+              <Button onClick={() => setActiveFilter("all")} className="mt-4">
+                Visa alla modeller
+              </Button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Why trust us */}
+      <section className="py-12">
+        <div className="mx-auto max-w-[720px] px-5">
+          <header className="mb-6 text-center">
+            <h2 className="font-display text-[clamp(1.35rem,2.5vw,1.75rem)] font-bold">Varför Elsparkcykeln.se?</h2>
+          </header>
+          <div className="mt-6 grid gap-8 md:grid-cols-3">
+            <div>
+              <h3 className="text-base font-bold">Svenskt fokus</h3>
+              <p className="mt-1 text-[0.9rem] leading-[1.55] text-[var(--color-text-muted)]">
+                Vi testar med fokus på svenska förhållanden — vinterkyla, regn, cykelbanor och lokala regler. Inte kaliforniskt solsken.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-base font-bold">Oberoende omdömen</h3>
+              <p className="mt-1 text-[0.9rem] leading-[1.55] text-[var(--color-text-muted)]">
+                Våra rankningar baseras på prestanda och värde, inte sponsring. Vi är transparenta med hur vi tjänar pengar.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-base font-bold">Alltid uppdaterat</h3>
+              <p className="mt-1 text-[0.9rem] leading-[1.55] text-[var(--color-text-muted)]">
+                Priser, regler och modeller ändras. Vi håller allt aktuellt så du kan lita på informationen.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ - Collapsed, 3 questions */}
-      <section className="py-10 md:py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="mb-6 text-center text-2xl font-bold">Vanliga frågor</h2>
-          <div className="mx-auto max-w-2xl rounded-xl border border-border/50 bg-card px-6">
-            <FAQItem 
-              question="Vilken elsparkcykel är bäst i test 2026?"
-              answer={
-                <>
-                  <strong>Segway Ninebot Max G2</strong> är vårt toppval med 5/5 betyg. Den har 70 km räckvidd, hydraulisk fjädring och utmärkt byggkvalitet. För budget rekommenderar vi <strong>Xiaomi 4 Pro</strong>.
-                </>
-              }
-              defaultOpen
-            />
-            <FAQItem 
-              question="Är elsparkcyklar lagliga i Sverige?"
-              answer={
-                <>
-                  Ja, med max 250W motor och 20 km/h. Snabbare modeller kräver registrering och försäkring. <Link to="/regler" className="text-primary hover:underline">Läs mer om reglerna →</Link>
-                </>
-              }
-            />
-            <FAQItem 
-              question="Behöver jag försäkring?"
-              answer={
-                <>
-                  Endast om din elsparkcykel går över 20 km/h, eller över 14 km/h och väger mer än 25 kg. <strong>NIU KQi3 Pro</strong> är väglaglig och kräver ingen försäkring.
-                </>
-              }
-            />
+      {/* FAQ */}
+      <section className="bg-[var(--color-bg-muted)] py-12">
+        <div className="mx-auto max-w-[720px] px-5">
+          <header className="mb-7">
+            <h2 className="font-display text-[clamp(1.35rem,2.5vw,1.75rem)] font-bold">Vanliga frågor</h2>
+          </header>
+          <div className="flex flex-col gap-2">
+            <details className="group overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-white">
+              <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-[0.95rem] font-semibold [&::-webkit-details-marker]:hidden">
+                Är elsparkcyklar lagliga i Sverige?
+                <span className="font-mono text-[1.1rem] text-[var(--color-text-subtle)] transition-transform duration-200 group-open:rotate-45">+</span>
+              </summary>
+              <div className="px-5 pb-5 text-[0.92rem] leading-[1.6] text-[var(--color-text-muted)]">
+                <p className="mb-3">
+                  Ja. Elsparkcyklar med max 20 km/h och 250W motor klassas som cykel och får
+                  köras på cykelbanor utan körkort. Modeller som överskrider dessa gränser
+                  kräver registrering och trafikförsäkring.
+                </p>
+                <p><Link to="/regler" className="text-[var(--color-accent)] no-underline hover:underline">Läs mer om reglerna →</Link></p>
+              </div>
+            </details>
+            <details className="group overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-white">
+              <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-[0.95rem] font-semibold [&::-webkit-details-marker]:hidden">
+                Vilken elsparkcykel är bäst för pendling?
+                <span className="font-mono text-[1.1rem] text-[var(--color-text-subtle)] transition-transform duration-200 group-open:rotate-45">+</span>
+              </summary>
+              <div className="px-5 pb-5 text-[0.92rem] leading-[1.6] text-[var(--color-text-muted)]">
+                <p className="mb-3">
+                  För daglig pendling rekommenderar vi modeller med minst 40 km räckvidd,
+                  10-tums hjul, bra fjädring och vattentålighet (IPX5). Segway Ninebot Max G2 och
+                  Xiaomi 5 Max är utmärkta val.
+                </p>
+                <p><a href="#produkter" className="text-[var(--color-accent)] no-underline hover:underline">Se pendlingsmodeller →</a></p>
+              </div>
+            </details>
+            <details className="group overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-white">
+              <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-[0.95rem] font-semibold [&::-webkit-details-marker]:hidden">
+                Behöver jag försäkring för min elsparkcykel?
+                <span className="font-mono text-[1.1rem] text-[var(--color-text-subtle)] transition-transform duration-200 group-open:rotate-45">+</span>
+              </summary>
+              <div className="px-5 pb-5 text-[0.92rem] leading-[1.6] text-[var(--color-text-muted)]">
+                <p className="mb-3">
+                  Om din elsparkcykel håller sig inom 20 km/h och 250W täcks du vanligtvis
+                  av din hemförsäkring. Modeller som kan köra snabbare kräver trafikförsäkring.
+                </p>
+                <p><Link to="/regler" className="text-[var(--color-accent)] no-underline hover:underline">Läs om försäkringsreglerna →</Link></p>
+              </div>
+            </details>
+            <details className="group overflow-hidden rounded-[6px] border border-[var(--color-border)] bg-white">
+              <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-[0.95rem] font-semibold [&::-webkit-details-marker]:hidden">
+                Kan man köra elsparkcykel på vintern?
+                <span className="font-mono text-[1.1rem] text-[var(--color-text-subtle)] transition-transform duration-200 group-open:rotate-45">+</span>
+              </summary>
+              <div className="px-5 pb-5 text-[0.92rem] leading-[1.6] text-[var(--color-text-muted)]">
+                <p className="mb-3">
+                  Ja, men det kräver förberedelse. Batterikapaciteten minskar 20–40% i kyla,
+                  och du bör överväga dubbdäck och extra belysning för säker vinterkörning.
+                </p>
+                <p><a href="#produkter" className="text-[var(--color-accent)] no-underline hover:underline">Se alla modeller →</a></p>
+              </div>
+            </details>
           </div>
-        </div>
-      </section>
-
-      {/* FINAL CTA */}
-      <section className="bg-primary py-10 md:py-12">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold text-primary-foreground">Redo att köpa?</h2>
-          <p className="mt-2 text-primary-foreground/80">
-            Vårt toppval: <strong>Segway Ninebot Max G2</strong> – {topPick.price.amount.toLocaleString("sv-SE")} kr
-          </p>
-          <Button asChild size="lg" variant="secondary" className="mt-6">
-            <a href={topPick.trackingUrl} target="_blank" rel="noopener noreferrer sponsored">
-              Se bästa pris på Segway Ninebot Max G2 →
-            </a>
-          </Button>
         </div>
       </section>
     </>

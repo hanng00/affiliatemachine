@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://elsparkcyklar.se/sitemap.xml
+Sitemap: https://xn--bstaelsparkcykeln-qqb.se/sitemap.xml

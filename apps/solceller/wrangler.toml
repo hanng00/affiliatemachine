@@ -1,0 +1,19 @@
+name = "solceller-worker"
+main = "worker/src/index.ts"
+compatibility_date = "2026-05-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Must match apiHostname(domain) in @affiliate/sites for slug "solceller".
+[[routes]]
+pattern = "api.solkalkylatorn.se"
+custom_domain = true
+
+[observability]
+enabled = true
+
+# KV namespace for lead storage.
+# Create once: wrangler kv namespace create solceller-leads
+# Then uncomment and paste the id:
+# [[kv_namespaces]]
+# binding = "LEADS"
+# id = "paste-id-here"

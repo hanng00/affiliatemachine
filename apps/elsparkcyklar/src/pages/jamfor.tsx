@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
-import { SEOHead } from "@affiliate/seo";
-import { AffiliateCard, Button, Badge } from "@affiliate/ui";
+import { SEOHead, SchemaScript, canonicalUrl, type ProductListItem } from "@affiliate/seo";
+import { useTrackClick } from "@affiliate/analytics";
 import { Link } from "react-router-dom";
 import { siteConfig } from "../config/site";
 import { getAllAffiliates, type ExtendedAffiliateProduct } from "../config/affiliates";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 type SortKey = "price" | "rating" | "range" | "weight";
 type FilterKey = "all" | "roadLegal" | "budget" | "premium" | "commuter" | "power";
@@ -36,72 +38,117 @@ function parseWeight(weight: string | undefined): number {
   return match ? parseFloat(match[1]) : 999;
 }
 
-function ComparisonTableRow({ product, rank }: { product: ExtendedAffiliateProduct; rank: number }) {
+function getBadgeVariant(badge?: string): "best" | "budget" | "premium" {
+  if (!badge) return "best";
+  if (badge.toLowerCase().includes("budget") || badge.toLowerCase().includes("bästa köp") || badge.toLowerCase().includes("prisvärd")) return "budget";
+  if (badge.toLowerCase().includes("premium")) return "premium";
+  return "best";
+}
+
+function ComparisonCard({ product, rank }: { product: ExtendedAffiliateProduct; rank: number }) {
+  const trackBuy = useTrackClick({
+    linkId: product.id,
+    program: "adtraction",
+    placement: "compare_card",
+    destinationUrl: product.trackingUrl,
+  });
   return (
-    <tr className="comparison-row border-b border-border/50 transition-colors hover:bg-muted/50">
-      <td className="p-4 text-center">
-        <div className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${rank === 1 ? "rank-badge-gold text-white" : "bg-muted text-muted-foreground"}`}>
-          {rank}
+    <article className="overflow-hidden rounded-[10px] border border-[var(--color-border)] bg-white">
+      <div className="grid grid-cols-1 md:grid-cols-[180px_1fr]">
+        {/* Image column */}
+        <div className="relative flex items-start bg-white">
+          <div className="sticky top-0 flex h-[180px] w-full items-center justify-center p-4">
+            <span className="absolute left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-[4px] bg-[var(--color-accent)] font-mono text-[0.85rem] font-semibold text-white">
+              {rank}
+            </span>
+            {product.image && (
+              <img
+                src={product.image}
+                alt={`${product.name} elsparkcykel`}
+                loading="lazy"
+                width="200"
+                height="200"
+                className="max-h-full max-w-full object-contain"
+              />
+            )}
+          </div>
         </div>
-      </td>
-      <td className="p-4">
-        <div className="flex items-center gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">{product.name}</span>
+
+        {/* Content column */}
+        <div className="px-5 py-4">
+          <div className="mb-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-[1.15rem] font-bold leading-tight">{product.name}</h3>
               {product.badge && (
-                <Badge
-                  variant={
-                    product.isRoadLegal ? "legal" :
-                    product.badge === "Bäst i test" || product.badge === "Bäst i test 2026" ? "gold" :
-                    product.requiresInsurance ? "warning" : "secondary"
-                  }
-                  className="text-[10px]"
-                >
-                  {product.badge}
-                </Badge>
+                <Badge variant={getBadgeVariant(product.badge)}>{product.badge}</Badge>
               )}
             </div>
-            <div className="mt-1 flex flex-wrap gap-2">
-              {product.isRoadLegal && (
-                <span className="text-xs font-medium text-emerald-600">✓ Väglaglig</span>
-              )}
-              {product.requiresInsurance && (
-                <span className="text-xs font-medium text-amber-600">⚠ Kräver försäkring</span>
+            <div className="mt-1 flex items-center gap-1.5 text-[0.85rem] text-[var(--color-text-muted)]">
+              <span className="font-mono font-semibold text-foreground">{product.rating}</span>
+              <span className="text-[var(--color-text-subtle)]">/ 5</span>
+              {product.bestFor && (
+                <>
+                  <span className="text-[var(--color-text-subtle)]">·</span>
+                  <span>{product.bestFor}</span>
+                </>
               )}
             </div>
           </div>
+
+          {product.summary && (
+            <p className="mb-3 text-[0.85rem] leading-[1.5] text-[var(--color-text-muted)]">{product.summary}</p>
+          )}
+
+          {/* Spec grid */}
+          <div className="grid grid-cols-4 gap-px overflow-hidden rounded-[6px] border border-[var(--color-border-subtle)] bg-[var(--color-border-subtle)]">
+            <div className="bg-white px-2 py-3 text-center">
+              <div className="font-mono text-base font-semibold">{product.topSpeedKmh ?? "–"}</div>
+              <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.04em] text-[var(--color-text-muted)]">km/h</div>
+            </div>
+            <div className="bg-white px-2 py-3 text-center">
+              <div className="font-mono text-base font-semibold">{product.rangeKm ?? "–"}</div>
+              <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.04em] text-[var(--color-text-muted)]">km</div>
+            </div>
+            <div className="bg-white px-2 py-3 text-center">
+              <div className="font-mono text-base font-semibold">{product.motorWatts ?? "–"}</div>
+              <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.04em] text-[var(--color-text-muted)]">W</div>
+            </div>
+            <div className="bg-white px-2 py-3 text-center">
+              <div className="font-mono text-base font-semibold">{product.weightKg ?? "–"}</div>
+              <div className="mt-0.5 text-[0.68rem] uppercase tracking-[0.04em] text-[var(--color-text-muted)]">kg</div>
+            </div>
+          </div>
+
+          {/* Pros */}
+          {product.pros && product.pros.length > 0 && (
+            <div className="mt-3 border-t border-[var(--color-border-subtle)] pt-3">
+              <h4 className="mb-1.5 text-[0.72rem] font-bold uppercase tracking-[0.04em] text-[var(--color-text-subtle)]">Fördelar</h4>
+              <ul className="flex flex-col gap-0.5 text-[0.8rem] text-[var(--color-text-muted)]">
+                {product.pros.slice(0, 3).map((pro, i) => (
+                  <li key={i}><span className="font-bold text-[var(--color-success)]">+ </span>{pro}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="mt-3 flex flex-col items-stretch gap-4 border-t border-[var(--color-border-subtle)] pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col">
+              <span className="font-mono text-[1.25rem] font-semibold">
+                {product.price.amount.toLocaleString("sv-SE")} kr
+              </span>
+              <span className="text-[0.7rem] text-[var(--color-text-subtle)]">Pris hos E-Wheels</span>
+            </div>
+            <Button asChild>
+              <a href={product.trackingUrl} target="_blank" rel="noopener sponsored nofollow" onClick={trackBuy}>
+                Köp nu →
+              </a>
+            </Button>
+          </div>
+          <p className="mt-3 text-right text-[0.7rem] text-[var(--color-text-subtle)]">Affiliatelänk — vi kan få provision vid köp</p>
         </div>
-      </td>
-      <td className="p-4 text-center">
-        <div className="flex items-center justify-center gap-1">
-          <span className="star-filled">★</span>
-          <span className="font-medium">{product.rating?.toFixed(1)}</span>
-        </div>
-      </td>
-      <td className="p-4 text-center">
-        <span className="price-tag font-bold">{product.price.amount.toLocaleString("sv-SE")} kr</span>
-      </td>
-      <td className="hidden p-4 text-center md:table-cell">
-        <span className="font-medium">{product.range}</span>
-      </td>
-      <td className="hidden p-4 text-center md:table-cell">
-        <span>{product.motor}</span>
-      </td>
-      <td className="hidden p-4 text-center lg:table-cell">
-        <span>{product.topSpeed}</span>
-      </td>
-      <td className="hidden p-4 text-center lg:table-cell">
-        <span>{product.weight}</span>
-      </td>
-      <td className="p-4 text-right">
-        <Button asChild size="sm" className="cta-glow">
-          <a href={product.trackingUrl} target="_blank" rel="noopener noreferrer sponsored">
-            Se pris →
-          </a>
-        </Button>
-      </td>
-    </tr>
+      </div>
+    </article>
   );
 }
 
@@ -149,62 +196,73 @@ export default function JamforPage() {
     return filtered;
   }, [allProducts, activeFilter, sortBy]);
 
+  const productListItems: ProductListItem[] = allProducts.map((p) => ({
+    name: p.name,
+    description: p.summary || p.description,
+    image: p.image,
+    url: `https://${siteConfig.domain}/#${p.id}`,
+    price: p.price.amount,
+    priceCurrency: p.price.currency || "SEK",
+  }));
+
   return (
     <>
       <SEOHead
-        title="Jämför elsparkcyklar 2026 – Hitta bästa modellen | Elsparkcyklar.se"
+        title={`Jämför elsparkcyklar 2026 – Hitta bästa modellen | ${siteConfig.brand}`}
         description="Jämför de bästa elsparkcyklarna sida vid sida. Filtrera på väglagliga, pris, räckvidd och mer. Uppdaterad maj 2026."
+        canonical={canonicalUrl(siteConfig.domain, "/jamfor")}
         siteName={siteConfig.name}
       />
+      <SchemaScript schema={{ type: "ItemList", items: productListItems }} />
 
       {/* Hero */}
-      <section className="hero-gradient py-12 md:py-16">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-              Jämför elsparkcyklar <span className="text-gradient">2026</span>
-            </h1>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Filtrera och sortera för att hitta den perfekta elsparkcykeln för dina behov.
-              Alla priser och specifikationer uppdaterade maj 2026.
+      <section className="border-b border-[var(--color-border-subtle)] py-12 md:py-14">
+        <div className="mx-auto max-w-[1080px] px-5">
+          <header className="max-w-[600px]">
+            <p className="mb-3 text-[0.75rem] font-semibold uppercase tracking-[0.05em] text-[var(--color-accent)]">
+              Uppdaterad maj 2026
             </p>
-          </div>
+            <h1 className="font-display text-[clamp(1.75rem,4vw,2.5rem)] font-bold leading-[1.25] tracking-[-0.01em]">
+              Jämför elsparkcyklar
+            </h1>
+            <p className="mt-4 text-[1.1rem] leading-[1.65] text-[var(--color-text-muted)]">
+              Filtrera och sortera för att hitta den perfekta elsparkcykeln för dina behov.
+              Alla priser och specifikationer uppdaterade.
+            </p>
+          </header>
         </div>
       </section>
 
       {/* Filters */}
-      <section className="sticky top-0 z-10 border-b border-border bg-background/95 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="container mx-auto px-4">
+      <section className="sticky top-14 z-10 border-b border-[var(--color-border)] bg-[var(--color-bg-elevated)]/95 py-4 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-bg-elevated)]/80">
+        <div className="mx-auto max-w-[1080px] px-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            {/* Filter buttons */}
             <div className="flex flex-wrap gap-2">
               {filterOptions.map((option) => (
                 <button
                   key={option.key}
                   onClick={() => setActiveFilter(option.key)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                  className={`rounded-[6px] px-3.5 py-2 text-[0.88rem] font-medium transition-all ${
                     activeFilter === option.key
-                      ? "bg-primary text-primary-foreground shadow-md"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      ? "bg-[var(--color-accent)] text-white"
+                      : "bg-[var(--color-bg-muted)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-muted)]/80"
                   }`}
                   title={option.description}
                 >
-                  {option.key === "roadLegal" && "✓ "}
                   {option.label}
                 </button>
               ))}
             </div>
 
-            {/* Sort dropdown */}
             <div className="flex items-center gap-2">
-              <label htmlFor="sort" className="text-sm text-muted-foreground">
+              <label htmlFor="sort" className="text-[0.85rem] text-[var(--color-text-muted)]">
                 Sortera:
               </label>
               <select
                 id="sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortKey)}
-                className="rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="rounded-[6px] border border-[var(--color-border)] bg-white px-3 py-2 text-[0.85rem] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               >
                 {sortOptions.map((option) => (
                   <option key={option.key} value={option.key}>
@@ -219,13 +277,13 @@ export default function JamforPage() {
 
       {/* Results count */}
       <section className="py-4">
-        <div className="container mx-auto px-4">
-          <p className="text-sm text-muted-foreground">
-            Visar <strong>{filteredAndSortedProducts.length}</strong> av {allProducts.length} modeller
+        <div className="mx-auto max-w-[1080px] px-5">
+          <p className="text-[0.85rem] text-[var(--color-text-muted)]">
+            Visar <strong className="text-foreground">{filteredAndSortedProducts.length}</strong> av {allProducts.length} modeller
             {activeFilter !== "all" && (
               <button
                 onClick={() => setActiveFilter("all")}
-                className="ml-2 text-primary hover:underline"
+                className="ml-2 text-[var(--color-accent)] hover:underline"
               >
                 Rensa filter
               </button>
@@ -234,35 +292,18 @@ export default function JamforPage() {
         </div>
       </section>
 
-      {/* Comparison Table */}
+      {/* Product cards */}
       <section className="pb-12">
-        <div className="container mx-auto px-4">
+        <div className="mx-auto max-w-[1080px] px-5">
           {filteredAndSortedProducts.length > 0 ? (
-            <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="p-4 text-center text-sm font-semibold text-muted-foreground">#</th>
-                    <th className="p-4 text-left text-sm font-semibold text-muted-foreground">Modell</th>
-                    <th className="p-4 text-center text-sm font-semibold text-muted-foreground">Betyg</th>
-                    <th className="p-4 text-center text-sm font-semibold text-muted-foreground">Pris</th>
-                    <th className="hidden p-4 text-center text-sm font-semibold text-muted-foreground md:table-cell">Räckvidd</th>
-                    <th className="hidden p-4 text-center text-sm font-semibold text-muted-foreground md:table-cell">Motor</th>
-                    <th className="hidden p-4 text-center text-sm font-semibold text-muted-foreground lg:table-cell">Hastighet</th>
-                    <th className="hidden p-4 text-center text-sm font-semibold text-muted-foreground lg:table-cell">Vikt</th>
-                    <th className="p-4 text-right text-sm font-semibold text-muted-foreground">Länk</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAndSortedProducts.map((product, index) => (
-                    <ComparisonTableRow key={product.id} product={product} rank={index + 1} />
-                  ))}
-                </tbody>
-              </table>
+            <div className="flex flex-col gap-4">
+              {filteredAndSortedProducts.map((product, index) => (
+                <ComparisonCard key={product.id} product={product} rank={index + 1} />
+              ))}
             </div>
           ) : (
-            <div className="rounded-xl border border-border bg-card p-12 text-center">
-              <p className="text-lg text-muted-foreground">Inga modeller matchar dina filter.</p>
+            <div className="rounded-[10px] border border-[var(--color-border)] bg-white p-12 text-center">
+              <p className="text-[var(--color-text-muted)]">Inga modeller matchar dina filter.</p>
               <Button onClick={() => setActiveFilter("all")} className="mt-4">
                 Visa alla modeller
               </Button>
@@ -271,76 +312,61 @@ export default function JamforPage() {
         </div>
       </section>
 
-      {/* Detailed Cards */}
-      <section className="bg-muted/30 py-12">
-        <div className="container mx-auto px-4">
-          <h2 className="mb-8 text-center text-2xl font-bold">Detaljerad jämförelse</h2>
-          <div className="grid gap-6 md:grid-cols-2">
-            {filteredAndSortedProducts.map((product, index) => (
-              <AffiliateCard
-                key={product.id}
-                product={product}
-                rank={index + 1}
-                showProsCons={true}
-                className="card-hover"
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Buying Guide */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl">
-            <h2 className="mb-8 text-center text-2xl font-bold">
+      <section className="bg-[var(--color-bg-muted)] py-12">
+        <div className="mx-auto max-w-[720px] px-5">
+          <header className="mb-7">
+            <h2 className="font-display text-[clamp(1.35rem,2.5vw,1.75rem)] font-bold">
               Så väljer du rätt elsparkcykel
             </h2>
+            <p className="mt-1 text-base text-[var(--color-text-muted)]">
+              Fyra steg till rätt val — baserat på dina behov och svenska förhållanden.
+            </p>
+          </header>
 
-            <div className="space-y-6">
-              <div className="rounded-xl border border-border bg-card p-6">
-                <h3 className="flex items-center gap-2 text-lg font-semibold">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">1</span>
-                  Bestäm din budget
-                </h3>
-                <p className="mt-3 text-muted-foreground">
-                  Elsparkcyklar finns från runt 5 000 kr till över 15 000 kr. För de flesta räcker en modell i mellanklassen
-                  (6 000-10 000 kr) som erbjuder bra prestanda och hållbarhet.
-                </p>
-              </div>
+          <div className="flex flex-col gap-4">
+            <div className="rounded-[10px] border border-[var(--color-border)] bg-white p-6">
+              <h3 className="flex items-center gap-3 font-bold">
+                <span className="flex h-7 w-7 items-center justify-center rounded-[4px] bg-[var(--color-accent)] font-mono text-[0.85rem] font-semibold text-white">1</span>
+                Bestäm din budget
+              </h3>
+              <p className="mt-2 text-[0.9rem] leading-[1.55] text-[var(--color-text-muted)]">
+                Elsparkcyklar finns från runt 3 000 kr till över 15 000 kr. För de flesta räcker en modell i mellanklassen
+                (6 000–10 000 kr) som erbjuder bra prestanda och hållbarhet.
+              </p>
+            </div>
 
-              <div className="rounded-xl border border-border bg-card p-6">
-                <h3 className="flex items-center gap-2 text-lg font-semibold">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">2</span>
-                  Tänk på räckvidden
-                </h3>
-                <p className="mt-3 text-muted-foreground">
-                  Hur långt behöver du kunna köra? För korta pendlingar räcker 30-40 km. För längre turer eller om du vill ha
-                  marginal, sikta på 50+ km räckvidd. Kom ihåg att verklig räckvidd ofta är 20-30% lägre än tillverkarens uppgift.
-                </p>
-              </div>
+            <div className="rounded-[10px] border border-[var(--color-border)] bg-white p-6">
+              <h3 className="flex items-center gap-3 font-bold">
+                <span className="flex h-7 w-7 items-center justify-center rounded-[4px] bg-[var(--color-accent)] font-mono text-[0.85rem] font-semibold text-white">2</span>
+                Tänk på räckvidden
+              </h3>
+              <p className="mt-2 text-[0.9rem] leading-[1.55] text-[var(--color-text-muted)]">
+                Hur långt behöver du kunna köra? För korta pendlingar räcker 30–40 km. Kom ihåg att verklig räckvidd 
+                ofta är 20–30% lägre än tillverkarens uppgift.
+              </p>
+            </div>
 
-              <div className="rounded-xl border border-border bg-card p-6">
-                <h3 className="flex items-center gap-2 text-lg font-semibold">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">3</span>
-                  Kolla lagkraven
-                </h3>
-                <p className="mt-3 text-muted-foreground">
-                  I Sverige är endast elsparkcyklar med max 250W motor och 20 km/h topphastighet lagliga på cykelbanor.
-                  Snabbare modeller kräver registrering och försäkring. <Link to="/regler" className="text-primary hover:underline">Läs mer om reglerna →</Link>
-                </p>
-              </div>
+            <div className="rounded-[10px] border border-[var(--color-border)] bg-white p-6">
+              <h3 className="flex items-center gap-3 font-bold">
+                <span className="flex h-7 w-7 items-center justify-center rounded-[4px] bg-[var(--color-accent)] font-mono text-[0.85rem] font-semibold text-white">3</span>
+                Kolla lagkraven
+              </h3>
+              <p className="mt-2 text-[0.9rem] leading-[1.55] text-[var(--color-text-muted)]">
+                I Sverige är endast elsparkcyklar med max 250W motor och 20 km/h topphastighet lagliga på cykelbanor.
+                Snabbare modeller kräver registrering och försäkring. <Link to="/regler" className="text-[var(--color-accent)] hover:underline">Läs mer om reglerna →</Link>
+              </p>
+            </div>
 
-              <div className="rounded-xl border border-border bg-card p-6">
-                <h3 className="flex items-center gap-2 text-lg font-semibold">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">4</span>
-                  Vikt och portabilitet
-                </h3>
-                <p className="mt-3 text-muted-foreground">
-                  Om du ska bära elsparkcykeln i trappor eller på kollektivtrafik är vikten viktig. Lätta modeller väger
-                  runt 15-18 kg, medan kraftfullare modeller kan väga 24-26 kg.
-                </p>
-              </div>
+            <div className="rounded-[10px] border border-[var(--color-border)] bg-white p-6">
+              <h3 className="flex items-center gap-3 font-bold">
+                <span className="flex h-7 w-7 items-center justify-center rounded-[4px] bg-[var(--color-accent)] font-mono text-[0.85rem] font-semibold text-white">4</span>
+                Vikt och portabilitet
+              </h3>
+              <p className="mt-2 text-[0.9rem] leading-[1.55] text-[var(--color-text-muted)]">
+                Om du ska bära elsparkcykeln i trappor eller på kollektivtrafik är vikten viktig. Lätta modeller väger
+                runt 11–17 kg, medan kraftfullare modeller kan väga 24–30 kg.
+              </p>
             </div>
           </div>
         </div>
@@ -348,8 +374,8 @@ export default function JamforPage() {
 
       {/* CTA */}
       <section className="py-12">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-muted-foreground">Osäker på reglerna?</p>
+        <div className="mx-auto max-w-[1080px] px-5 text-center">
+          <p className="text-[var(--color-text-muted)]">Osäker på reglerna?</p>
           <Button asChild variant="outline" className="mt-4">
             <Link to="/regler">Läs om svenska lagar och regler →</Link>
           </Button>

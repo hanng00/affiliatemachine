@@ -8,14 +8,13 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
-      "@affiliate/ui": resolve(__dirname, "../../packages/ui/src"),
     },
   },
   server: {
     port: 5180,
     proxy: {
       "/api": {
-        target: "http://localhost:8787",
+        target: "http://localhost:8789",
         changeOrigin: true,
       },
     },

@@ -1,0 +1,19 @@
+name = "bilforsakringar-worker"
+main = "worker/src/index.ts"
+compatibility_date = "2026-05-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Must match apiHostname(domain) in @affiliate/sites for slug "bilforsakringar".
+[[routes]]
+pattern = "api.billigastebilforsakringen.se"
+custom_domain = true
+
+[observability]
+enabled = true
+
+[browser]
+binding = "BROWSER"
+
+[[kv_namespaces]]
+binding = "SEARCHES"
+id = "4ac24364bc7f44fabe4d38cd41a5806e"

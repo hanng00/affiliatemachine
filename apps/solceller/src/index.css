@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  /* Solar editorial: warm sun-amber primary, deep ink, green = savings */
+  --color-border: #ECE4D8;
+  --color-input: #ECE4D8;
+  --color-ring: #F59E0B;
+  --color-background: #FCFAF6;
+  --color-foreground: #1C1410;
+
+  /* Sun amber = "solenergi"; drives primary CTAs. Deep enough for white text. */
+  --color-primary: #D97706;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: #FBF3E6;
+  --color-secondary-foreground: #5A3B12;
+
+  --color-accent: #FEF3E2;
+  --color-accent-foreground: #1C1410;
+
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-muted: #F5EEE3;
+  --color-muted-foreground: #79695A;
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1C1410;
+
+  /* Brand accents reused across the page */
+  --color-sky: #F59E0B;
+  --color-sky-soft: #FEF1D6;
+  --color-sun: #F59E0B;
+  --color-sun-soft: #FEF3C7;
+  --color-grass: #16A34A;
+
+  --radius: 1rem;
+
+  --font-display: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1C1410;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* Leaflet draw toolbar tweaks so it matches the theme and stays out of the way */
+.leaflet-container {
+  font-family: var(--font-sans);
+}
+.leaflet-draw-toolbar a {
+  border-radius: 0.5rem !important;
+}

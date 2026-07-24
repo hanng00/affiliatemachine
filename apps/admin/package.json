@@ -8,19 +8,16 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "deploy": "vite build && wrangler pages deploy dist --project-name=affiliate-admin && wrangler deploy worker/src/index.ts",
-    "worker:dev": "wrangler dev worker/src/index.ts",
-    "worker:deploy": "wrangler deploy worker/src/index.ts",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "wrangler d1 migrations apply affiliate-admin --local",
-    "db:migrate:prod": "wrangler d1 migrations apply affiliate-admin",
-    "db:seed": "bash scripts/seed.sh"
+    "deploy": "vite build && wrangler deploy",
+    "worker:dev": "vite build && wrangler dev",
+    "worker:deploy": "vite build && wrangler deploy"
   },
   "dependencies": {
-    "@affiliate/ui": "workspace:*",
-    "@radix-ui/react-slot": "^1.2.4",
+    "@affiliate/sites": "workspace:*",
+    "clsx": "^2.1.1",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260519.1",
@@ -29,8 +26,6 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.5.0",
-    "drizzle-kit": "^0.31.10",
-    "drizzle-orm": "^0.44.7",
     "hono": "^4.12.21",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.9.3",

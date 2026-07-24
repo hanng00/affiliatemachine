@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Räntekollen">
+  <rect width="100" height="100" rx="24" fill="#13505B"/>
+  <!-- "Interest under control": a falling rate-line that resolves into a check
+       tick, sitting on a ledger baseline. One concept, two readings. -->
+  <path d="M26 38 L46 58 L74 30"
+        fill="none" stroke="#E9B949" stroke-width="9"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M30 72 H70" fill="none" stroke="#FBF8F2" stroke-width="7"
+        stroke-linecap="round" opacity="0.92"/>
+</svg>

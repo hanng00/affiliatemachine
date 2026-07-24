@@ -1,4 +1,4 @@
-import { cn } from "@affiliate/ui";
+import { cn } from "@/lib/utils";
 import type { CompareMode } from "../types";
 
 interface CompareSelectorProps {

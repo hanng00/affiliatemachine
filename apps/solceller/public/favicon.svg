@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0369A1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="88" height="88" rx="22" fill="url(#sky)"/>
+  <!-- Sun -->
+  <circle cx="50" cy="44" r="14" fill="#FBBF24"/>
+  <g stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round">
+    <path d="M50 18v6M50 64v6M22 44h6M72 44h6M31 25l4.2 4.2M64.8 58.8 69 63M69 25l-4.2 4.2M35.2 58.8 31 63"/>
+  </g>
+  <!-- Roof / panels hint -->
+  <path d="M28 78 L50 66 L72 78 Z" fill="#FFFFFF" opacity="0.92"/>
+</svg>

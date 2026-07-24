@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  /* Clean-mobility editorial: deep ink, fresh green + teal accents */
+  --color-border: #E3E8E6;
+  --color-input: #E3E8E6;
+  --color-ring: #10B981;
+  --color-background: #F6FAF8;
+  --color-foreground: #0E1A15;
+
+  /* Emerald green = "electric/eco mobility"; drives primary CTAs */
+  --color-primary: #047857;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: #ECF4F0;
+  --color-secondary-foreground: #14342A;
+
+  --color-accent: #E6F4EE;
+  --color-accent-foreground: #0E1A15;
+
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-muted: #EEF3F1;
+  --color-muted-foreground: #54655D;
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #0E1A15;
+
+  /* Brand accents reused across the page */
+  --color-leaf: #10B981;
+  --color-leaf-soft: #D6F2E6;
+  --color-teal: #0D9488;
+  --color-sun: #F59E0B;
+  --color-sun-soft: #FEF3C7;
+
+  --radius: 1rem;
+
+  --font-display: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #08130E;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.rise {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  html { scroll-behavior: auto; }
+}

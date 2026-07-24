@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="leaf" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="88" height="88" rx="22" fill="url(#leaf)"/>
+  <!-- Simple e-bike: two wheels + frame + a lightning bolt for the motor -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="32" cy="64" r="13"/>
+    <circle cx="70" cy="64" r="13"/>
+    <path d="M32 64 L46 44 L62 44 M46 44 L57 64 M62 44 L70 64"/>
+  </g>
+  <path d="M52 30 L44 48 L51 48 L47 60 L60 42 L52 42 Z" fill="#FBBF24"/>
+</svg>

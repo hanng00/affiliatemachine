@@ -33,6 +33,24 @@ export interface ProductSchema {
   };
 }
 
+export interface ProductListItem {
+  name: string;
+  url?: string;
+  image?: string;
+  description?: string;
+  brand?: string;
+  price?: number;
+  priceCurrency?: string;
+  /** Only set ratingValue together with a real reviewCount, or Google rejects the markup. */
+  ratingValue?: number;
+  reviewCount?: number;
+}
+
+export interface ItemListSchema {
+  type: "ItemList";
+  items: ProductListItem[];
+}
+
 export interface FAQSchema {
   type: "FAQPage";
   questions: { question: string; answer: string }[];
@@ -43,7 +61,13 @@ export interface BreadcrumbSchema {
   items: { name: string; url: string }[];
 }
 
-export type SchemaType = WebsiteSchema | ArticleSchema | ProductSchema | FAQSchema | BreadcrumbSchema;
+export type SchemaType =
+  | WebsiteSchema
+  | ArticleSchema
+  | ProductSchema
+  | ItemListSchema
+  | FAQSchema
+  | BreadcrumbSchema;
 
 export function generateSchema(schema: SchemaType): string {
   let jsonLd: Record<string, unknown>;
@@ -98,6 +122,43 @@ export function generateSchema(schema: SchemaType): string {
               reviewCount: schema.aggregateRating.reviewCount,
             }
           : undefined,
+      };
+      break;
+
+    case "ItemList":
+      jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        itemListElement: schema.items.map((item, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          item: {
+            "@type": "Product",
+            name: item.name,
+            description: item.description,
+            image: item.image,
+            url: item.url,
+            brand: item.brand ? { "@type": "Brand", name: item.brand } : undefined,
+            offers:
+              item.price !== undefined
+                ? {
+                    "@type": "Offer",
+                    price: item.price,
+                    priceCurrency: item.priceCurrency || "SEK",
+                    availability: "https://schema.org/InStock",
+                    url: item.url,
+                  }
+                : undefined,
+            aggregateRating:
+              item.ratingValue !== undefined && item.reviewCount
+                ? {
+                    "@type": "AggregateRating",
+                    ratingValue: item.ratingValue,
+                    reviewCount: item.reviewCount,
+                  }
+                : undefined,
+          },
+        })),
       };
       break;
 

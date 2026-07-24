@@ -20,8 +20,13 @@
       "@affiliate/ui": ["packages/ui/src"],
       "@affiliate/ui/*": ["packages/ui/src/*"],
       "@affiliate/analytics": ["packages/analytics/src"],
+      "@affiliate/sites": ["packages/sites/src"],
       "@affiliate/seo": ["packages/seo/src"],
-      "@affiliate/mdx": ["packages/mdx/src"]
+      "@affiliate/mdx": ["packages/mdx/src"],
+      "@affiliate/insurance-providers": ["domains/insurance-providers/src"],
+      "@affiliate/insurance-providers/*": ["domains/insurance-providers/src/*"],
+      "@affiliate/solar-calculator": ["domains/solar-calculator/src"],
+      "@affiliate/bike-benefit": ["domains/bike-benefit/src"]
     }
   },
   "exclude": ["node_modules", "dist"]

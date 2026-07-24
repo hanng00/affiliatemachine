@@ -1,4 +1,4 @@
-import type { RobotVacuumProduct, UserReview } from "../config/affiliates";
+import type { RobotVacuumProduct, UserReview } from "@/config/affiliates";
 
 interface ReviewCardProps {
   review: UserReview;

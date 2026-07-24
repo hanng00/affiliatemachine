@@ -1,10 +1,12 @@
-export { SEOHead, type SEOHeadProps } from "./meta";
+export { SEOHead, canonicalUrl, type SEOHeadProps } from "./meta";
 export {
   generateSchema,
   SchemaScript,
   type WebsiteSchema,
   type ArticleSchema,
   type ProductSchema,
+  type ProductListItem,
+  type ItemListSchema,
   type FAQSchema,
   type BreadcrumbSchema,
   type SchemaType,

@@ -1,4 +1,22 @@
-import type { AffiliateProduct } from "@affiliate/ui";
+export interface AffiliateProduct {
+  id: string;
+  name: string;
+  description?: string;
+  logo?: string;
+  image?: string;
+  rating?: number;
+  price: {
+    amount: number;
+    currency?: string;
+    period?: string;
+    originalAmount?: number;
+  };
+  pros?: string[];
+  cons?: string[];
+  trackingUrl: string;
+  badge?: string;
+  features?: string[];
+}
 
 export interface RobotVacuumProduct extends AffiliateProduct {
   suctionPower?: string;
@@ -27,7 +45,7 @@ export const affiliates = {
     name: "Roborock S8 Pro Ultra",
     description: "Premiummodell med självtömmande station, automatisk mopptvätt och 6000 Pa sugkraft. Vårt toppval för 2026.",
     logo: "/logos/roborock.svg",
-    image: "https://placehold.co/400x400/1F2937/FFFFFF?text=S8+Pro+Ultra",
+    image: "https://m.media-amazon.com/images/I/61DvTl3xxbL._AC_SX679_.jpg",
     rating: 4.9,
     price: {
       amount: 13990,
@@ -64,7 +82,7 @@ export const affiliates = {
     name: "Roborock Q Revo",
     description: "Utmärkt mellanklass med roterande moppar och självtömmande station. Bästa pris/prestanda 2026.",
     logo: "/logos/roborock.svg",
-    image: "https://placehold.co/400x400/374151/FFFFFF?text=Q+Revo",
+    image: "https://m.media-amazon.com/images/I/51e1NH1prJL._AC_UF1000,1000_QL80_.jpg",
     rating: 4.7,
     price: {
       amount: 7990,
@@ -138,7 +156,7 @@ export const affiliates = {
     name: "iRobot Roomba j7+",
     description: "Klassiker med utmärkt hinderdetektering. Undviker kablar och djurspillning pålitligt.",
     logo: "/logos/irobot.svg",
-    image: "https://placehold.co/400x400/6B7280/FFFFFF?text=Roomba+j7%2B",
+    image: "https://m.media-amazon.com/images/I/51ISjXVTKgL.jpg",
     rating: 4.5,
     price: {
       amount: 7990,
@@ -249,7 +267,7 @@ export const affiliates = {
     name: "Samsung Jet Bot AI+",
     description: "Samsungs flaggskepp med AI-kamera och SmartThings-integration. Perfekt för Samsung-hem.",
     logo: "/logos/samsung.svg",
-    image: "https://placehold.co/400x400/1E3A8A/FFFFFF?text=Jet+Bot+AI%2B",
+    image: "https://files.refurbed.com/pi/samsung-vr9500-jet-bot-ai-plus-1725362447.jpg?t=fitdesign&h=600&w=800",
     rating: 4.3,
     price: {
       amount: 11990,

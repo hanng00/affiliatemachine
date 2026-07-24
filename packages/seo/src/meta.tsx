@@ -1,5 +1,20 @@
 import { Helmet } from "react-helmet-async";
 
+/**
+ * Absolute canonical URL for a page. Pass `siteConfig.domain` + route path.
+ *
+ * The host is ASCII/punycode-encoded (e.g. `bästaelsparkcykeln.se` →
+ * `xn--bstaelsparkcykeln-qqb.se`). A raw-Unicode host is an invalid URL per
+ * RFC 3986, which makes canonical/og:url tags ambiguous to crawlers; emitting
+ * the ASCII form is the spec-correct, indexable representation.
+ */
+export function canonicalUrl(domain: string, path = "/"): string {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  const asciiHost = new URL(`https://${domain}`).host;
+  if (normalized === "/") return `https://${asciiHost}/`;
+  return `https://${asciiHost}${normalized}`;
+}
+
 export interface SEOHeadProps {
   title: string;
   description: string;
