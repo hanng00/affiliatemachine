@@ -58,7 +58,12 @@ Load the relevant leaf doc when working in a unit:
 
 Every app deploys independently to Cloudflare Pages via root `deploy:*` scripts. `bilforsakringar` and `admin` additionally deploy a Worker (`deploy:*-worker`).
 
+On every push to `main`, `.github/workflows/deploy.yml` deploys only the apps the push changed (`ops/changed-apps.ts`: the app, its workspace deps, or root build files) by running each app's own `deploy` script. Merging to `main` is the deploy approval. Manual runs: Actions → Deploy → Run workflow.
+
 ## Decision Log
+
+**2026-11-27: Deploy on merge via GitHub Actions**
+Deploys moved from a laptop to CI so the merge is the approval and nothing depends on local-only config. CI calls each app's existing `deploy` script rather than duplicating the wrangler command in `cloudflare/wrangler-action`, so local and CI deploys can't drift. Non-secret Cloudflare ids (KV namespace ids) are committed in `wrangler.toml`; tokens live in GitHub secrets and Worker secrets in Cloudflare.
 
 **2026-05-29: `insurance-providers` moved to `domains/`**
 It enforces business rules (provider quoting, package mapping, form/session config), so by the PHILOSOPHY test it is a domain, not shared infrastructure. Moved out of `packages/` and added to the `domains/*` workspace glob and tsconfig paths. Shared infra (`ui`, `analytics`, `seo`, `mdx`) stays in `packages/`.

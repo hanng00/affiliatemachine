@@ -17,8 +17,6 @@ the only Swedish tool that collapses intent→offer by letting you draw your own
   - `components/RoofMap.tsx` — address geocode via `lib/geocode.ts` (Google Places
     API New, Nominatim fallback) → Leaflet map on Google satellite tiles → `leaflet-draw`
     polygon/rectangle → `@turf/area` computes the drawn roof area in m². Emits `onAreaChange(sqm)`.
-  - `components/HouseScene.tsx` — Three.js 3D villa whose roof fills with panels as the
-    count rises. Decorative/dwell-time only; carries no SEO weight.
 - Business math lives in `@affiliate/solar-calculator` (domain), never in the app.
 - Config:
   - `src/config/site.ts` — name/domain/SEO/nav (GA4/GTM empty until provisioned).
