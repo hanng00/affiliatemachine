@@ -12,8 +12,6 @@ custom_domain = true
 enabled = true
 
 # KV namespace for lead storage.
-# Create once: wrangler kv namespace create solceller-leads
-# Then uncomment and paste the id:
-# [[kv_namespaces]]
-# binding = "LEADS"
-# id = "paste-id-here"
+[[kv_namespaces]]
+binding = "LEADS"
+id = "1ccc7331a20544a1a778a0a1a7da3e11"
