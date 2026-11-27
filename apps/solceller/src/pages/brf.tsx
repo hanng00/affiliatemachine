@@ -1,6 +1,5 @@
 import { lazy, Suspense, useMemo, useRef, useState } from "react";
 import { SEOHead, SchemaScript, canonicalUrl } from "@affiliate/seo";
-import { useTrackClick, buildSubId, appendSubId } from "@affiliate/analytics";
 import {
   calculateSolar,
   brfAssumptions,
@@ -10,7 +9,6 @@ import {
   formatKwh,
 } from "@affiliate/solar-calculator";
 import { siteConfig } from "@/config/site";
-import { getPrimaryPartner } from "@/config/affiliates";
 import type { RoofMapHandle } from "@/components/RoofMap";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { SavingsChart } from "@/components/SavingsChart";
@@ -51,7 +49,6 @@ export default function BrfPage() {
   const [regionId, setRegionId] = useState<(typeof regions)[number]["id"]>("stockholm");
   const [hasZoomed, setHasZoomed] = useState(false);
   const [withImd, setWithImd] = useState(true);
-  const [leadCaptured, setLeadCaptured] = useState(false);
 
   const mapRef = useRef<RoofMapHandle>(null);
   const [query, setQuery] = useState("");
@@ -95,17 +92,6 @@ export default function BrfPage() {
   );
   const momsavdrag = withImd ? applyMomsavdrag(result.grossCost) : 0;
   const netCostBrf = result.grossCost - momsavdrag;
-
-  const partner = getPrimaryPartner();
-  const subId = buildSubId(siteConfig.slug, "brf_cta", partner.id);
-  const href = appendSubId(partner.trackingUrl, subId);
-  const trackQuote = useTrackClick({
-    linkId: partner.id,
-    program: "adtraction",
-    placement: "brf_cta",
-    destinationUrl: href,
-    subId,
-  });
 
   const hasRoof = result.panels > 0;
   const step = hasRoof ? 3 : hasZoomed ? 2 : 1;
@@ -296,20 +282,7 @@ export default function BrfPage() {
                     region={regionId}
                     address={query}
                     source="brf"
-                    onSuccess={() => setLeadCaptured(true)}
-                  >
-                    {leadCaptured && (
-                      <a
-                        href={href}
-                        onClick={trackQuote}
-                        target="_blank"
-                        rel="nofollow sponsored noopener"
-                        className="mt-3 inline-block text-sm font-medium text-primary underline-offset-2 hover:underline"
-                      >
-                        Gå direkt till installatörer →
-                      </a>
-                    )}
-                  </LeadCapture>
+                  />
                 </>
               )}
             </div>

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { SEOHead, SchemaScript, canonicalUrl } from "@affiliate/seo";
-import { useTrackClick, useTrackActivation, buildSubId, appendSubId } from "@affiliate/analytics";
+import { useTrackActivation } from "@affiliate/analytics";
 import {
   calculateSolar,
   defaultAssumptions,
@@ -9,7 +9,6 @@ import {
   formatKwh,
 } from "@affiliate/solar-calculator";
 import { siteConfig } from "@/config/site";
-import { getPrimaryPartner } from "@/config/affiliates";
 import type { RoofMapHandle } from "@/components/RoofMap";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { SavingsChart } from "@/components/SavingsChart";
@@ -51,7 +50,6 @@ export default function HomePage() {
   const [roofAreaSqm, setRoofAreaSqm] = useState(0);
   const [regionId, setRegionId] = useState<(typeof regions)[number]["id"]>("mellan");
   const [hasZoomed, setHasZoomed] = useState(false);
-  const [leadCaptured, setLeadCaptured] = useState(false);
 
   const mapRef = useRef<RoofMapHandle>(null);
   const [query, setQuery] = useState("");
@@ -99,17 +97,6 @@ export default function HomePage() {
   useEffect(() => {
     if (result.kwp > 0) trackActivation(result.annualSavings);
   }, [result.kwp, result.annualSavings, trackActivation]);
-
-  const partner = getPrimaryPartner();
-  const subId = buildSubId(siteConfig.slug, "results_cta", partner.id);
-  const href = appendSubId(partner.trackingUrl, subId);
-  const trackQuote = useTrackClick({
-    linkId: partner.id,
-    program: "adtraction",
-    placement: "results_cta",
-    destinationUrl: href,
-    subId,
-  });
 
   const hasRoof = result.panels > 0;
   const step = hasRoof ? 3 : hasZoomed ? 2 : 1;
@@ -287,21 +274,7 @@ export default function HomePage() {
                     region={regionId}
                     address={query}
                     source="villa"
-                    onSuccess={() => setLeadCaptured(true)}
-                  >
-                    {/* After lead capture, show the affiliate link */}
-                    {leadCaptured && (
-                      <a
-                        href={href}
-                        onClick={trackQuote}
-                        target="_blank"
-                        rel="nofollow sponsored noopener"
-                        className="mt-3 inline-block text-sm font-medium text-primary underline-offset-2 hover:underline"
-                      >
-                        Gå direkt till installatörer →
-                      </a>
-                    )}
-                  </LeadCapture>
+                  />
                 </>
               )}
             </div>

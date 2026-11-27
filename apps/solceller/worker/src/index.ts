@@ -20,6 +20,9 @@ interface StoredLead {
   region: string;
   address?: string;
   source: "villa" | "brf";
+  phone?: string;
+  /** Install horizon picked in step 1 of the form: "3m" | "12m" | "curious". */
+  timeline?: string;
 }
 
 const site = getSite("solceller")!;
@@ -62,7 +65,7 @@ app.get("/", (c) => {
 app.post("/lead", async (c) => {
   const body = await c.req.json();
 
-  const { email, roofAreaSqm, kwp, annualSavings, netCost, region, address, source } = body;
+  const { email, phone, timeline, roofAreaSqm, kwp, annualSavings, netCost, region, address, source } = body;
 
   if (!email || typeof email !== "string" || !email.includes("@")) {
     return c.json(
@@ -90,6 +93,8 @@ app.post("/lead", async (c) => {
     region: region ?? "mellan",
     address: address?.trim(),
     source: source === "brf" ? "brf" : "villa",
+    phone: typeof phone === "string" && phone.trim() ? phone.trim().slice(0, 32) : undefined,
+    timeline: ["3m", "12m", "curious"].includes(timeline) ? timeline : undefined,
   };
 
   await c.env.LEADS.put(`lead:${leadId}`, JSON.stringify(lead), {

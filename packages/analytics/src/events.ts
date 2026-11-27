@@ -36,7 +36,22 @@ export type ActivationEvent = {
   value?: number;
 };
 
-export type AnalyticsEvent = AffiliateClickEvent | PageViewEvent | ActivationEvent;
+/**
+ * Own-lead funnel (sites that capture the lead themselves). `lead_step` marks
+ * progress through a multi-step form; `generate_lead` is GA4's recommended
+ * event name for a successful submit, so it can be marked as a key event.
+ */
+export type LeadEvent = {
+  event: "lead_step" | "generate_lead";
+  /** Which form/page variant (e.g. "villa", "brf"). */
+  form: string;
+  /** Step name for `lead_step` (e.g. "timeline_selected"). */
+  step?: string;
+  /** Optional magnitude (e.g. annual saving shown) for segmentation. */
+  value?: number;
+};
+
+export type AnalyticsEvent = AffiliateClickEvent | PageViewEvent | ActivationEvent | LeadEvent;
 
 export function trackEvent(event: AnalyticsEvent): void {
   if (typeof window === "undefined") return;
@@ -78,6 +93,10 @@ export function trackAffiliateClick(params: Omit<AffiliateClickEvent, "event">):
 
 export function trackPageView(path: string, title: string): void {
   trackEvent({ event: "page_view", page_path: path, page_title: title });
+}
+
+export function trackLead(params: LeadEvent): void {
+  trackEvent(params);
 }
 
 export function trackActivation(params: Omit<ActivationEvent, "event">): void {
