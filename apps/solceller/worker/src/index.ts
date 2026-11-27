@@ -5,6 +5,8 @@ import { getSite, isAllowedWorkerCorsOrigin } from "@affiliate/sites";
 type Bindings = {
   ENVIRONMENT: string;
   LEADS: KVNamespace;
+  /** Bearer token for GET /leads. Unset → the endpoint is disabled (404). */
+  LEADS_ADMIN_TOKEN?: string;
 };
 
 interface StoredLead {
@@ -109,8 +111,14 @@ app.post("/lead", async (c) => {
   });
 });
 
-// List leads (for admin/export — protect in production)
+// List leads (admin/export). Holds PII (email + address): requires
+// `Authorization: Bearer $LEADS_ADMIN_TOKEN`; disabled entirely when unset.
 app.get("/leads", async (c) => {
+  const expected = c.env.LEADS_ADMIN_TOKEN;
+  if (!expected) return c.json({ success: false }, 404);
+  if (c.req.header("Authorization") !== `Bearer ${expected}`) {
+    return c.json({ success: false }, 401);
+  }
   const list = await c.env.LEADS.list({ prefix: "lead:" });
   const leads: StoredLead[] = [];
 

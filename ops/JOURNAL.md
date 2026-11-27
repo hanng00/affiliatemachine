@@ -1077,3 +1077,14 @@ Monthly cap: `<SET_SEK>` SEK. ROAS target: revenue ≥ 1.5× spend / 30d.
   all greenfield sites at 0. Portfolio RPC structurally 0 (placeholder affiliate URLs). These two
   facts seed the Structural facts block at the top.
 
+
+### 2026-11-27 · solceller · security (lock down public GET /leads)
+- finding: `GET https://api.solkalkylatorn.se/leads` returned HTTP 200 with no auth: every stored
+  lead's email + address was publicly readable (GDPR exposure).
+- change: `apps/solceller/worker/src/index.ts` — `/leads` now 404s unless `LEADS_ADMIN_TOKEN` is
+  set, and then requires `Authorization: Bearer <token>`. POST `/lead` unchanged.
+- build: worker typechecks (only pre-existing error is the app's missing `three` types in a fresh install).
+- deploy: REQUESTED — from the local clone (its uncommitted wrangler.toml holds the LEADS KV id):
+  `cd apps/solceller && bun run worker:deploy`. Expected: `/leads` → 404.
+- note: new read-only tool `ops/pull-site-insights.ts` (GSC queries/pages + GA4 events). Flagged per
+  self-development rule; output is gitignored.
