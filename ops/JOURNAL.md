@@ -1104,3 +1104,16 @@ Monthly cap: `<SET_SEK>` SEK. ROAS target: revenue ≥ 1.5× spend / 30d.
 - deploy: REQUESTED — `deploy:solceller` site + `worker:deploy` (worker from the local clone).
 - human dependency: copy promises personal follow-up, so leads must be answered by hand.
 - metric: `generate_lead` users ÷ `activation` users. review on: 2026-12-04 (CRO window 3–7 days).
+
+### 2026-11-27 · portfolio · tooling (deploy on merge to main)
+- change: `.github/workflows/deploy.yml` + `ops/changed-apps.ts`. On push to `main`, deploys only the
+  apps the push touched (app dir, its workspace deps, or root build files) via each app's own
+  `deploy` script. Human approval moves from "run the deploy script" to "merge the PR".
+- local-only config committed: solceller `LEADS` KV namespace id (not a secret). Tokens stay out of git.
+- fresh-install fixes CI needed: `@affiliate/seo` gets `react` as a devDependency so bun links one
+  `react-helmet-async` copy (prerender crashed on every site with two copies); removed the unused
+  `HouseScene.tsx` (imported `three`, which isn't a dependency) so solceller typecheck is green.
+- build: all 8 apps typecheck + build green in a clean install.
+- deploy: first merge touches `bun.lock`, so it deploys all 8 apps, including anything merged but not
+  yet deployed. Needs GitHub secrets CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, VITE_GOOGLE_MAPS_API_KEY first.
+- note: CLAUDE.md loop step 7 still says a human runs `deploy:<site>`; updating it is a self-edit, left for approval.

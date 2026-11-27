@@ -1,0 +1,86 @@
+# Deploy to Cloudflare on merge to main, only the apps the push changed.
+#
+# Which apps: ops/changed-apps.ts (app dir, its workspace deps, or root build files).
+# How: each app's own `deploy` script, so CI runs exactly what a local deploy runs
+# (Pages for every site; plus the Worker for solceller, bilforsakringar and admin).
+#
+# Needs repo secrets CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID, and
+# VITE_GOOGLE_MAPS_API_KEY (solceller address search; build falls back to
+# Nominatim without it). Worker secrets (wrangler secret put) live in Cloudflare
+# and survive deploys, so they are not needed here.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: 'Apps to deploy: "all" or a comma list, e.g. solceller,admin'
+        default: all
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.pick.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - id: pick
+        env:
+          INPUT_APPS: ${{ github.event.inputs.apps }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "$INPUT_APPS" = "all" ]; then
+              apps=$(bun ops/changed-apps.ts all)
+            else
+              apps=$(printf '%s' "$INPUT_APPS" | tr -d ' ' | jq -Rc 'split(",") | map(select(length > 0))')
+            fi
+          elif [ -z "$BEFORE" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            # New branch or unknown base: deploy everything rather than guess.
+            apps=$(bun ops/changed-apps.ts all)
+          else
+            apps=$(bun ops/changed-apps.ts "$BEFORE" "$GITHUB_SHA")
+          fi
+          # Only real app dirs may reach the deploy matrix.
+          for app in $(printf '%s' "$apps" | jq -r '.[]'); do
+            [[ "$app" =~ ^[a-z0-9-]+$ && -f "apps/$app/package.json" ]] || { echo "unknown app: $app"; exit 1; }
+          done
+          echo "Deploying: $apps"
+          echo "apps=$apps" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: changes
+    if: needs.changes.outputs.apps != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.changes.outputs.apps) }}
+    concurrency:
+      group: deploy-${{ matrix.app }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - name: Typecheck
+        run: bun run --cwd apps/${{ matrix.app }} typecheck
+      - name: Build + deploy
+        run: bun run --cwd apps/${{ matrix.app }} deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
