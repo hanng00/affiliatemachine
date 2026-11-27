@@ -14,12 +14,14 @@ export {
   trackPageView,
   trackActivation,
   trackActivationOnce,
+  trackLead,
   buildSubId,
   appendSubId,
   type AnalyticsEvent,
   type AffiliateClickEvent,
   type PageViewEvent,
   type ActivationEvent,
+  type LeadEvent,
 } from "./events";
 export { usePageView } from "./hooks/usePageView";
 export { useTrackClick } from "./hooks/useTrackClick";

@@ -5,6 +5,8 @@ import { getSite, isAllowedWorkerCorsOrigin } from "@affiliate/sites";
 type Bindings = {
   ENVIRONMENT: string;
   LEADS: KVNamespace;
+  /** Bearer token for GET /leads. Unset → the endpoint is disabled (404). */
+  LEADS_ADMIN_TOKEN?: string;
 };
 
 interface StoredLead {
@@ -18,6 +20,9 @@ interface StoredLead {
   region: string;
   address?: string;
   source: "villa" | "brf";
+  phone?: string;
+  /** Install horizon picked in step 1 of the form: "3m" | "12m" | "curious". */
+  timeline?: string;
 }
 
 const site = getSite("solceller")!;
@@ -60,7 +65,7 @@ app.get("/", (c) => {
 app.post("/lead", async (c) => {
   const body = await c.req.json();
 
-  const { email, roofAreaSqm, kwp, annualSavings, netCost, region, address, source } = body;
+  const { email, phone, timeline, roofAreaSqm, kwp, annualSavings, netCost, region, address, source } = body;
 
   if (!email || typeof email !== "string" || !email.includes("@")) {
     return c.json(
@@ -88,6 +93,8 @@ app.post("/lead", async (c) => {
     region: region ?? "mellan",
     address: address?.trim(),
     source: source === "brf" ? "brf" : "villa",
+    phone: typeof phone === "string" && phone.trim() ? phone.trim().slice(0, 32) : undefined,
+    timeline: ["3m", "12m", "curious"].includes(timeline) ? timeline : undefined,
   };
 
   await c.env.LEADS.put(`lead:${leadId}`, JSON.stringify(lead), {
@@ -109,8 +116,14 @@ app.post("/lead", async (c) => {
   });
 });
 
-// List leads (for admin/export — protect in production)
+// List leads (admin/export). Holds PII (email + address): requires
+// `Authorization: Bearer $LEADS_ADMIN_TOKEN`; disabled entirely when unset.
 app.get("/leads", async (c) => {
+  const expected = c.env.LEADS_ADMIN_TOKEN;
+  if (!expected) return c.json({ success: false }, 404);
+  if (c.req.header("Authorization") !== `Bearer ${expected}`) {
+    return c.json({ success: false }, 401);
+  }
   const list = await c.env.LEADS.list({ prefix: "lead:" });
   const leads: StoredLead[] = [];
 

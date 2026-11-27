@@ -1077,3 +1077,30 @@ Monthly cap: `<SET_SEK>` SEK. ROAS target: revenue ≥ 1.5× spend / 30d.
   all greenfield sites at 0. Portfolio RPC structurally 0 (placeholder affiliate URLs). These two
   facts seed the Structural facts block at the top.
 
+
+### 2026-11-27 · solceller · security (lock down public GET /leads)
+- finding: `GET https://api.solkalkylatorn.se/leads` returned HTTP 200 with no auth: every stored
+  lead's email + address was publicly readable (GDPR exposure).
+- change: `apps/solceller/worker/src/index.ts` — `/leads` now 404s unless `LEADS_ADMIN_TOKEN` is
+  set, and then requires `Authorization: Bearer <token>`. POST `/lead` unchanged.
+- build: worker typechecks (only pre-existing error is the app's missing `three` types in a fresh install).
+- deploy: REQUESTED — from the local clone (its uncommitted wrangler.toml holds the LEADS KV id):
+  `cd apps/solceller && bun run worker:deploy`. Expected: `/leads` → 404.
+- note: new read-only tool `ops/pull-site-insights.ts` (GSC queries/pages + GA4 events). Flagged per
+  self-development rule; output is gitignored.
+
+### 2026-11-27 · solceller · CRO (two-step lead form, honest copy, lead tracking)
+- data (GA4/GSC, 90d): 402 search clicks; 182 of 192 tracked users got an estimate; 3 leads
+  (~1.6% of estimators). Leak = estimate → lead.
+- hypothesis: framing the form as the last step, a one-tap first question, larger tap targets, a
+  sticky mobile CTA and copy that matches what actually happens lift estimate→lead from ~1.6%.
+- change: `LeadCapture` rewritten (timeline chips → email + optional phone; recap success state;
+  real social proof from GA4). Removed the placeholder "Gå direkt till installatörer" link
+  (example.com). Removed unverifiable copy ("upp till 4 offerter från kvalitetssäkrade
+  installatörer"). New GA4 events `lead_step` + `generate_lead` (shared `LeadEvent` type). Worker
+  stores optional `phone` + `timeline`.
+- build: client + SSR build green, typecheck green except the pre-existing unused `HouseScene`
+  (`three` not a dependency). Prerender fails identically on main in a fresh install (helmet).
+- deploy: REQUESTED — `deploy:solceller` site + `worker:deploy` (worker from the local clone).
+- human dependency: copy promises personal follow-up, so leads must be answered by hand.
+- metric: `generate_lead` users ÷ `activation` users. review on: 2026-12-04 (CRO window 3–7 days).
